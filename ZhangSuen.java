@@ -25,13 +25,153 @@ class ZhangSuen {
     private Point pointMin;
     public static Color pix[][];
     public static int pix01[][];
+    private final int MAX_INTERSECT_PATTERN = 20;
+    private final int MAX_ENDPOINT_PATTERN = 4;
+    private final int MAX_SISA = 4;
+    private final int sisaPointPattern[][][] = {
+        // 0
+        {{1, 0, 0},
+        {0, 1, 0},
+        {0, 0, 0}},
+
+        // 1
+        {{0, 0, 1},
+        {0, 1, 0},
+        {0, 0, 0}},
+
+        // 2
+        {{0, 0, 0},
+        {0, 1, 0},
+        {0, 0, 1}},
+
+        // 3
+        {{0, 0, 0},
+        {0, 1, 0},
+        {1, 0, 0}}
+    };
+    private final int intersectPoinPattern[][][] = {
+        // 0
+        {{-1, -1, -1},
+        {1, 1, 1},
+        {0, 1, 0}},
+
+        // 1
+        {{ 0, 1, -1},
+        { 1, 1, -1},
+        { 0, 1, -1}},
+
+        // 2
+        {{ 0, 1, 0},
+        { 1, 1, 1},
+        { -1, -1, -1}},
+
+        // 3
+        {{ -1, 1, 0},
+        { -1, 1, 1},
+        { -1, 1, 0}},
+
+        // 4
+        {{ -1, 1, 0},
+        { 0, 1, 1},
+        { 1, 0, -1}},
+        
+        // 5
+        {{ 1, 0, -1},
+        { 0, 1, 1},
+        { -1, 1, 0}},
+        
+        // 6
+        {{ -1, 1, 0},
+        { 1, 1, 0},
+        { 0, 1, -1}},
+
+        // 7
+        {{ 0, 1, -1},
+        { 1, 1, 0},
+        { -1, 0, 1}},
+
+        // 8
+        {{ -1, 0, 1},
+        { 0, 1, 0},
+        { 1, 0, 1}},
+        
+        // 9
+        {{ 1, 0, -1},
+        { 0, 1, 0},
+        { 1, 0, 1}},
+
+        // 10
+        {{ 1, 0, 1},
+        { 0, 1, 0},
+        { 1, 0, -1}},
+
+        // 11
+        {{ 1, 0, 1},
+        { 0, 1, 0},
+        { -1, 0, 1}},
+
+        // 12
+        {{ -1, 0, 1},
+        { 1, 1, 0},
+        { 0, 0, 1}},
+
+        // 13
+        {{ 0, 0, 1},
+        { 1, 1, 0},
+        { -1, 0, 1}},
+
+        // 14
+        {{ 0, 1, -1},
+        { 0, 1, 0},
+        { 1, 0, 1}},
+
+        // 15
+        {{ -1, 1, 0},
+        { 0, 1, 0},
+        { 1, 0, 1}},
+
+        // 16
+        {{ 1, 0, 0},
+        { 0, 1, 1},
+        { 1, 0, -1}},
+
+        // 17
+        {{ 1, 0, -1},
+        { 0, 1, 1},
+        { 1, 0, 0}},
+
+        // 18
+        {{ 1, 0, 1},
+        { 0, 1, 0},
+        { -1, 1, 0}},
+
+        // 19
+        {{ 1, 0, 1},
+        { 0, 1, 0},
+        { 0, 1, -1}}
+    };
+    private final int endPointPattern[][][]= { 
+        {{0, 0, 0},
+        {0, 1, 0},
+        {-1, 1, -1}},
+
+        {{0, 0, -1},
+        {0, 1, 1},
+        {0, 0, -1}},
+
+        {{-1, 1, -1},
+        {0, 1, 0},
+        {0, 0, 0}},
+
+        {{-1, 0, 0},
+        {1, 1, 0},
+        {-1, 0, 0}}
+    };
     /*
     P9 P2 P3
     P8 P1 P4
     P7 P6 P5
-
     Dir
-
     */
 
     private final int iterationDirections[][] = {{0, -1}, {1, -1}, {1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0}, {-1, -1}, {0, -1}};
@@ -40,7 +180,7 @@ class ZhangSuen {
 
     private ArrayList<Point> toZerolist;
 
-    public ZhangSuen(int matrix[][],int height ,int width){
+    public ZhangSuen(int matrix[][], int height, int width){
         this.width = width;
         this.height = height;
 
@@ -69,6 +209,121 @@ class ZhangSuen {
             }
         }
     }
+ 
+    public boolean isFoundListOfPoint(ArrayList<Point> pList, int x, int y){
+        for (Point p: pList){
+            if(p.x == x && p.y == y){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public ArrayList<Point> getIntersectPoint(){
+        ArrayList<Point> pList = new ArrayList<>();
+        for (Point p: this.resultThinningList){
+            if (isValidIntersectPoint(p.x, p.y)){
+                pList.add(new Point(p));
+            }
+        }
+        return pList;
+    }
+
+    public boolean isNeighboorValidIntersect(int xCenter, int yCenter){
+        boolean isValid = false;
+        for(int i=0;i < this.iterationDirections.length - 1 ;i++){
+            if( (xCenter + this.iterationDirections[i][1]) >= 0 && (xCenter + this.iterationDirections[i][1]) < this.height && (yCenter + this.iterationDirections[i][0]) >= 0 && (yCenter + this.iterationDirections[i][0]) < this.width){
+                if (isValidIntersectPoint(xCenter + this.iterationDirections[i][1], yCenter + this.iterationDirections[i][0])){
+                    isValid = true;
+                    break;
+                }
+            }
+        }
+        return isValid;
+    }
+
+    public boolean isValidIntersectPoint(int x, int y){
+        if(this.matrixBlackWhite[x][y] == 0){
+            return false;
+        }
+
+        boolean isValid = false;
+        int centerX = 1;
+        int centerY = 1;
+        for(int idx = 0;idx < this.MAX_INTERSECT_PATTERN; idx++){
+            isValid = true;
+            for(int i=0;i < this.iterationDirections.length - 1 ;i++){
+                if( (x + this.iterationDirections[i][1]) >= 0 && (x + this.iterationDirections[i][1]) < this.height && (y + this.iterationDirections[i][0]) >= 0 && (y + this.iterationDirections[i][0]) < this.width){
+                    if(this.intersectPoinPattern[idx][centerX + this.iterationDirections[i][1]][centerY + this.iterationDirections[i][0]] > -1){
+                        if(this.intersectPoinPattern[idx][centerX + this.iterationDirections[i][1]][centerY + this.iterationDirections[i][0]] != this.matrixBlackWhite[x + this.iterationDirections[i][1]][y + this.iterationDirections[i][0]]){
+                            isValid = false;
+                            break;
+                        }
+                    }
+                } 
+            }
+            if (isValid){
+                break;
+            }
+        }
+        return isValid;
+    }
+
+    public boolean isValidEndPoint(int x, int y){
+        if(this.matrixBlackWhite[x][y] == 0){
+            return false;
+        }
+
+        boolean isValid = false;
+        int centerX = 1;
+        int centerY = 1;
+        for(int idx = 0;idx < this.MAX_ENDPOINT_PATTERN; idx++){
+            isValid = true;
+            for(int i=0;i < this.iterationDirections.length - 1 ;i++){
+                if( (x + this.iterationDirections[i][1]) >= 0 && (x + this.iterationDirections[i][1]) < this.height && (y + this.iterationDirections[i][0]) >= 0 && (y + this.iterationDirections[i][0]) < this.width){
+                    if(this.endPointPattern[idx][centerX + this.iterationDirections[i][1]][centerY + this.iterationDirections[i][0]] > -1){
+                        if(this.endPointPattern[idx][centerX + this.iterationDirections[i][1]][centerY + this.iterationDirections[i][0]] != this.matrixBlackWhite[x + this.iterationDirections[i][1]][y + this.iterationDirections[i][0]]){
+                            isValid = false;
+                            break;
+                        }
+                    }
+                } 
+            }
+            if (isValid){
+                break;
+            }
+        }
+        return isValid;
+    } 
+
+    public boolean isValidSisaPoint(int x, int y){
+        if(this.matrixBlackWhite[x][y] == 0){
+            return false;
+        }
+
+        boolean isValid = false;
+        int centerX = 1;
+        int centerY = 1;
+        for(int idx = 0;idx < this.MAX_SISA; idx++){
+            isValid = true;
+            for(int i=0;i < this.iterationDirections.length - 1 ;i++){
+                if( (x + this.iterationDirections[i][1]) >= 0 && (x + this.iterationDirections[i][1]) < this.height && (y + this.iterationDirections[i][0]) >= 0 && (y + this.iterationDirections[i][0]) < this.width){
+                    if(this.sisaPointPattern[idx][centerX + this.iterationDirections[i][1]][centerY + this.iterationDirections[i][0]] > -1){
+                        if(this.sisaPointPattern[idx][centerX + this.iterationDirections[i][1]][centerY + this.iterationDirections[i][0]] != this.matrixBlackWhite[x + this.iterationDirections[i][1]][y + this.iterationDirections[i][0]]){
+                            isValid = false;
+                            break;
+                        }
+                    }
+                } 
+            }
+            if (isValid){
+                break;
+            }
+        }
+        return isValid;
+    }
+
+    
 
     public static void readImage(BufferedImage img, Writer writer){
         // try{
@@ -171,13 +426,20 @@ class ZhangSuen {
             int px;
             for(int i=0;i<this.height;i++){
                 for(int j=0;j<this.width;j++){
-                    if(this.matrixBlackWhite[i][j] == 1){
+                    // R G B
+                    if(this.matrixBlackWhite[i][j] == 1){ //B
                         px = 0;
-                    }else{
+                        int col = (px << 16) | (px << 8) | px;
+                        img.setRGB(j, i, col);
+                    }else if(this.matrixBlackWhite[i][j] == 0){ //W
                         px = 255;
+                        int col = (px << 16) | (px << 8) | px;
+                        img.setRGB(j, i, col);
+                    }else{ //R
+                        int col = (255 << 16) | (0 << 8) | 0;
+                        img.setRGB(j, i, col);
                     }
-                    int col = (px << 16) | (px << 8) | px;
-                    img.setRGB(j, i, col);
+                    
                 }
             }
             ImageIO.write(img, "PNG", f);
@@ -263,9 +525,9 @@ class ZhangSuen {
     public void thinImage(){
         boolean firstStep = true;
         boolean changed = false;
-        int ii = 0;
+        // int ii = 0;
         do{
-            ii++;
+            // ii++;
             // System.out.println("LOOP - " + ii);
             changed = false;
             firstStep = !firstStep;
@@ -305,6 +567,7 @@ class ZhangSuen {
     }
 
     public void setThinningList(){
+        this.resultThinningList.clear();
         for(int i=0;i<height;i++){
             for(int j=0;j<width;j++){
                 if (this.matrixBlackWhite[i][j] == 1){
@@ -327,13 +590,15 @@ class ZhangSuen {
         ArrayList<Point> pList = new ArrayList<>();
         for (Point p: this.resultThinningList){
             // System.out.println("(" + p.x + ", " + p.y + ")");
-            if (numNeighbors(p.x, p.y) == 1){
+            if (numNeighbors(p.x, p.y) == 1 || isValidEndPoint(p.x, p.y)){
                 // System.out.println("(" + p.x + ", " + p.y + ")");
                 pList.add(new Point(p));
             }
         }
         return pList;
     }
+
+
 
     public void printEndpoint(){
         ArrayList<Point> pList = getEndPoint();
@@ -382,7 +647,7 @@ class ZhangSuen {
         System.out.println("min : " + this.pointMin.x + ", " + this.pointMin.y);
     }
 
-    public int getArea(int h, int w){
+    public int getAreaQuadran(int h, int w){
         // 1 .. 4
         int area = 0;
         if ((h > this.pointMin.x) && (h < ((this.pointMax.x + this.pointMin.x) / 2)) && (w > this.pointMin.y) && (w < (this.pointMax.y + this.pointMin.y) / 2)){
@@ -394,9 +659,28 @@ class ZhangSuen {
         }else if(h > ((this.pointMax.x + this.pointMin.x) / 2) && h < this.pointMax.x && w > this.pointMin.y && (w < (this.pointMax.y + this.pointMin.y) / 2)){
             area = 4;
         }
-        // else originv
+        // else origin
         return area;
     }
+
+    public int getAreaQuadran(Point p){
+        int h = p.x;
+        int w = p.y;
+        // 1 .. 4
+        int area = 0;
+        if ((h > this.pointMin.x) && (h < ((this.pointMax.x + this.pointMin.x) / 2)) && (w > this.pointMin.y) && (w < (this.pointMax.y + this.pointMin.y) / 2)){
+            area = 1;
+        }else if(h > this.pointMin.x && h < ((this.pointMax.x + this.pointMin.x) / 2) && w > ((this.pointMax.y + this.pointMin.y) / 2) && w < this.pointMax.y){
+            area = 2;
+        }else if(h > ((this.pointMax.x + this.pointMin.x) / 2) && h < this.pointMax.x && w > ((this.pointMax.y + this.pointMin.y) / 2) && w < this.pointMax.y){
+            area = 3;
+        }else if(h > ((this.pointMax.x + this.pointMin.x) / 2) && h < this.pointMax.x && w > this.pointMin.y && (w < (this.pointMax.y + this.pointMin.y) / 2)){
+            area = 4;
+        }
+        // else origin
+        return area;
+    }
+
 
     public int getDirection(Point p){
         int h = p.x;
@@ -409,6 +693,10 @@ class ZhangSuen {
             }
         }
         return dir;
+    }
+
+    public double getGradien(Point p1,Point p2){
+        return (double)(p2.y - p1.y) / (double)(p2.x - p1.x); 
     }
 
     public void deleteLineToCenter(Point p, Point pCenter, ArrayList<Integer> dirL){
@@ -434,6 +722,197 @@ class ZhangSuen {
         // l2 dalam keadaan kososng/empty l2
         for(int i: l1){
             l2.add(i);
+        }
+    }
+
+    public ArrayList<Point> getListDeleteFromEndPoint(int x, int y){
+        // int distance = 0;
+        // x,y adalah end point
+        ArrayList<Point> chainCodePoint = new ArrayList<Point>();
+        int dir = MAX_DIRECTION - 1;
+        // this.matrixBlackWhite[x][y] = 0;
+        int xBegin = x;
+        int yBegin = y;
+        int xPrev = xBegin;
+        int yPrev = yBegin;
+
+        chainCodePoint.add(new Point(xBegin, yBegin));
+        // int from;
+        // ArrayList<int> chainCode = new ArrayList();
+        while(!isNeighboorValidIntersect(xBegin, yBegin) && !isValidEndPoint(xBegin, yBegin) && numNeighbors(xBegin,yBegin) > 1){
+            int from = 0;
+            xPrev = xBegin;
+            yPrev = yBegin;
+            if (dir % 2 == 0){
+                from = (dir + 7) % MAX_DIRECTION;
+            }else{
+                from = (dir + 6) % MAX_DIRECTION;
+            }
+            boolean found = false;
+            // System.out.println("LOOP");
+            for(int i=0;i<MAX_DIRECTION;i++){
+                // System.out.println( "dir = " + from);
+                if (from == 0){
+                    xBegin = xPrev;
+                    yBegin = yPrev + 1;
+                }else if (from == 1){
+                    xBegin = xPrev - 1;
+                    yBegin = yPrev + 1;
+                }else if (from == 2){
+                    xBegin = xPrev - 1;
+                    yBegin = yPrev;
+                }else if (from == 3){
+                    xBegin = xPrev - 1;
+                    yBegin = yPrev - 1;
+                }else if (from == 4){
+                    xBegin = xPrev;
+                    yBegin = yPrev - 1;
+                }else if (from == 5){
+                    xBegin = xPrev + 1;
+                    yBegin = yPrev - 1;
+                }else if (from == 6){
+                    xBegin = xPrev + 1;
+                    yBegin = yPrev;
+                }else if (from == 7){
+                    xBegin = xPrev + 1;
+                    yBegin = yPrev + 1;
+                }
+
+                if ((xBegin >= 0 && xBegin < this.height) && (yBegin >= 0 && yBegin < this.width)){
+                    // System.out.println(xBegin + " " + yBegin);
+                    if (this.matrixBlackWhite[xBegin][yBegin] == 1){
+                        // System.out.println("masuk");
+                        found = true;
+                        // this.matrixBlackWhite[xBegin][yBegin] = 0;
+                        chainCodePoint.add(new Point(xBegin, yBegin));
+                    }
+                }
+
+                if (found){
+                    break;
+                }else{
+                    from = (from + 1) % MAX_DIRECTION;                    
+                }
+            }
+
+            if(found){
+                dir = from;
+                // this.chainCode.add(dir);
+                // distance++;
+            } 
+        }
+
+        // delete point
+        
+        // for(Point p: chainCodePoint){
+        //     if(!isValidIntersectPoint(p.x, p.y)){
+        //         System.out.println(this.matrixBlackWhite[p.x][p.y]);
+        //         System.out.println(p.x + " , " + p.y);
+        //         this.matrixBlackWhite[p.x][p.y] = 0;
+        //     }
+        // }
+        // System.out.println("end of deleted");
+        return chainCodePoint;
+    }
+
+    public void deleteLine(Point p){
+        int xStart = p.x;
+        int yStart = p.y;
+        // Log.d("pointdelete  : ", " " + p.x + " " + p.y);
+        while (numNeighbors(xStart, yStart) <= 1){
+            int h = xStart;
+            int w = yStart;
+            int dir = -1;
+
+            this.matrixBlackWhite[xStart][yStart] = 0;
+            for(int i=0;i < this.iterationDirections.length - 1 ;i++){
+
+                // System.out.println(this.matrixBlackWhite[h + this.iterationDirections[i][1]][w + this.iterationDirections[i][0]]);
+                if (this.matrixBlackWhite[h + this.iterationDirections[i][1]][w + this.iterationDirections[i][0]] == 1 && dir == -1){
+                    dir = i;
+                }
+            }
+            // Log.d("direction deleteline : ", " " + dir);
+            xStart = h + this.iterationDirections[dir][1];
+            yStart = w + this.iterationDirections[dir][0];
+        }
+    }
+
+    public void postProcessingThreshold(int tholdPrecentage){
+        // thold percentage from longer width or height   
+        getBoundPoints();
+        int sizeFromBounded = (this.pointMax.x - this.pointMin.x) * (this.pointMax.x - this.pointMin.x) + (this.pointMax.y - this.pointMin.y) * (this.pointMax.y - this.pointMin.y);
+        double sizeFromBounded2 = Math.sqrt((double) sizeFromBounded);
+        int tholdSize = (int) sizeFromBounded2 * tholdPrecentage / 100;
+
+        // if (this.height > this.width){
+        //     tholdSize = (int)this.height*thold / (int) 100;
+        // }else{
+        //     tholdSize = (int)this.width*thold / (int) 100;
+        // }
+        ArrayList<Point> delPoint = new ArrayList<>();
+        ArrayList<Point> pList = getEndPoint();
+        boolean isChanged = true;
+        while(isChanged){
+            isChanged = false; 
+            delPoint.clear();
+            pList.clear();
+            pList = getEndPoint();
+            if (pList.size() > 2){
+                for(Point p : pList){
+                    if (getDistanceFromPattern(p.x, p.y) < tholdSize){
+                    // System.out.println("Deleted");
+                    isChanged = true;
+                    delPoint.addAll(getListDeleteFromEndPoint(p.x, p.y));
+                    // setThinningList();
+                    }
+                }
+            }
+            deletePointFromList(delPoint);
+            deletePointFromList(getDeleteSisaPoint(pList, this.resultThinningList));
+            deletePointFromList(getDeleteEndPointPattern(this.resultThinningList));
+            setThinningList();
+            getBoundPoints();
+        }
+        
+    }
+
+    public ArrayList<Point> getDeleteEndPointPattern(ArrayList<Point> pListThinning){
+        ArrayList<Point> delPoint = new ArrayList<>();
+        for(Point p : pListThinning){
+            if(this.matrixBlackWhite[p.x][p.y] == 1){
+                if(isValidEndPoint(p.x, p.y)){
+                    delPoint.add(p);
+                }
+            }
+        }
+        return delPoint;
+    }
+
+    public ArrayList<Point> getDeleteSisaPoint(ArrayList<Point> pListEndPoint, ArrayList<Point> pListThinning){
+        ArrayList<Point> delPoint = new ArrayList<>();
+        for(Point p : pListThinning){
+            if(this.matrixBlackWhite[p.x][p.y] == 1){
+                if(!isFoundListOfPoint(pListEndPoint, p.x, p.y)){
+                    if(numNeighbors(p.x, p.y) == 0 || isValidSisaPoint(p.x, p.y)){
+                        delPoint.add(p);
+                    }
+                }
+            }
+        }
+        return delPoint;
+    }
+
+    public void deletePointFromList(ArrayList<Point> delPoint){
+        for(Point p : delPoint){
+            this.matrixBlackWhite[p.x][p.y] = 0;
+        }
+    }
+
+    public void colorRedEndPoint(){
+        ArrayList<Point> pList = getEndPoint();
+        for(Point p: pList){
+            this.matrixBlackWhite[p.x][p.y] = -1;
         }
     }
 
@@ -485,6 +964,19 @@ class ZhangSuen {
 
     }
 
+    public void printAllDistanceEndPoint(){
+        ArrayList<Point> pList = getEndPoint();
+        for(int i=0;i<pList.size();i++){
+            System.out.print("(" + pList.get(i).x + ", " + pList.get(i).y + ")");
+            Point p = pList.get(i);
+            int n = getDistanceFromPattern(p.x, p.y);
+            System.out.println(n);
+        }
+        
+        // delete soon
+        // this.matrixBlackWhite[64][205] = -1;
+    }
+
     public Point getMinEndPointDistance(ArrayList<Point> pList){
         int idx = 0;
         int minLen = getDistance(pList.get(0));
@@ -516,6 +1008,38 @@ class ZhangSuen {
                 // System.out.println(this.matrixBlackWhite[h + this.iterationDirections[i][1]][w + this.iterationDirections[i][0]]);
                 if (this.matrixBlackWhite[h + this.iterationDirections[i][1]][w + this.iterationDirections[i][0]] == 1 && dir == -1 && (h + this.iterationDirections[i][1]) != currentX && (w + this.iterationDirections[i][0]) != currentY){
                     dir = i;
+                }   
+            }
+            if (dir == -1){
+                break;
+            }
+            // Log.d("directiondistance  : ", " " + dir);
+            xStart = h + this.iterationDirections[dir][1];
+            yStart = w + this.iterationDirections[dir][0];
+            currentX = h;
+            currentY = w;
+        }
+        return len;
+    }
+
+    public int getDistance(int x, int y){
+        int xStart = x;
+        int yStart = y;
+        int currentX = -1;
+        int currentY = -1;
+        int len = 0;
+        // Log.d("pointdistance  : ", " " + p.x + " " + p.y);
+        while (numNeighbors(xStart, yStart) <= 2){
+            int h = xStart;
+            int w = yStart;
+            int dir = -1;
+            len++;
+//            this.matrixBlackWhite[xStart][yStart] = 0;
+            for(int i=0;i < this.iterationDirections.length - 1 ;i++){
+
+                // System.out.println(this.matrixBlackWhite[h + this.iterationDirections[i][1]][w + this.iterationDirections[i][0]]);
+                if (this.matrixBlackWhite[h + this.iterationDirections[i][1]][w + this.iterationDirections[i][0]] == 1 && dir == -1 && (h + this.iterationDirections[i][1]) != currentX && (w + this.iterationDirections[i][0]) != currentY){
+                    dir = i;
                 }
             }
             if (dir == -1){
@@ -530,27 +1054,86 @@ class ZhangSuen {
         return len;
     }
 
-    public void deleteLine(Point p){
-        int xStart = p.x;
-        int yStart = p.y;
-        // Log.d("pointdelete  : ", " " + p.x + " " + p.y);
-        while (numNeighbors(xStart, yStart) <= 1){
-            int h = xStart;
-            int w = yStart;
-            int dir = -1;
+    public int getDistanceFromPattern(int x, int y){
+        int distance = 0;
+        int xBegin = x;
+        int yBegin = y;
+        int xPrev = xBegin;
+        int yPrev = yBegin;
+        int dir = MAX_DIRECTION - 1;
 
-            this.matrixBlackWhite[xStart][yStart] = 0;
-            for(int i=0;i < this.iterationDirections.length - 1 ;i++){
-
-                // System.out.println(this.matrixBlackWhite[h + this.iterationDirections[i][1]][w + this.iterationDirections[i][0]]);
-                if (this.matrixBlackWhite[h + this.iterationDirections[i][1]][w + this.iterationDirections[i][0]] == 1 && dir == -1){
-                    dir = i;
-                }
+        // int from;
+        // ArrayList<int> chainCode = new ArrayList();
+        while(!isNeighboorValidIntersect(xBegin, yBegin) && !isValidEndPoint(xBegin, yBegin) && numNeighbors(xBegin,yBegin) > 1){
+            int from = 0;
+            xPrev = xBegin;
+            yPrev = yBegin;
+            if (dir % 2 == 0){
+                from = (dir + 7) % MAX_DIRECTION;
+            }else{
+                from = (dir + 6) % MAX_DIRECTION;
             }
-            // Log.d("direction deleteline : ", " " + dir);
-            xStart = h + this.iterationDirections[dir][1];
-            yStart = w + this.iterationDirections[dir][0];
+            boolean found = false;
+            // System.out.println("LOOP");
+            for(int i=0;i<MAX_DIRECTION;i++){
+                // System.out.println( "dir = " + from);
+                if (from == 0){
+                    xBegin = xPrev;
+                    yBegin = yPrev + 1;
+                }else if (from == 1){
+                    xBegin = xPrev - 1;
+                    yBegin = yPrev + 1;
+                }else if (from == 2){
+                    xBegin = xPrev - 1;
+                    yBegin = yPrev;
+                }else if (from == 3){
+                    xBegin = xPrev - 1;
+                    yBegin = yPrev - 1;
+                }else if (from == 4){
+                    xBegin = xPrev;
+                    yBegin = yPrev - 1;
+                }else if (from == 5){
+                    xBegin = xPrev + 1;
+                    yBegin = yPrev - 1;
+                }else if (from == 6){
+                    xBegin = xPrev + 1;
+                    yBegin = yPrev;
+                }else if (from == 7){
+                    xBegin = xPrev + 1;
+                    yBegin = yPrev + 1;
+                }
+
+                if ((xBegin >= 0 && xBegin < this.height) && (yBegin >= 0 && yBegin < this.width)){
+                    // System.out.println(xBegin + " " + yBegin);
+                    if (this.matrixBlackWhite[xBegin][yBegin] == 1){
+                        // System.out.println("masuk");
+                        found = true;
+                        // this.matrixBlackWhite[xBegin][yBegin] = -1;
+                        // this.chainCodePoint.add(new Point(xBegin, yBegin));
+                    }
+                }
+
+                if (found){
+                    break;
+                }else{
+                    from = (from + 1) % MAX_DIRECTION;                    
+                }
+            
+            }
+
+            if(found){
+                dir = from;
+                // this.chainCode.add(dir);
+                distance++;
+            } 
+
+            // buat test
+            // if (isValidIntersectPoint(xBegin, yBegin)){
+            //     // this.matrixBlackWhite[xBegin][yBegin] = -1;
+            //     System.out.println("intersect = " + xBegin + " , " + yBegin);
+            // }
         }
+        return distance;
     }
 
     public int recognizeNumber(){
@@ -739,9 +1322,9 @@ class ZhangSuen {
                     int dir2 = getDirection(p2);
                     int dir3 = getDirection(p3);
 
-                    int area1 = getArea(p1.x, p1.y);
-                    int area2 = getArea(p2.x, p2.y);
-                    int area3 = getArea(p3.x, p3.y);
+                    int area1 = getAreaQuadran(p1.x, p1.y);
+                    int area2 = getAreaQuadran(p2.x, p2.y);
+                    int area3 = getAreaQuadran(p3.x, p3.y);
 
                     int middlex = (this.pointMax.x + this.pointMin.x) / 2;
                     int middley = (this.pointMax.y + this.pointMin.y) / 2;
@@ -768,12 +1351,216 @@ class ZhangSuen {
         return number;
     }
 
+    public int getAmountOfHole(){
+        ArrayList<Point> pListIntersect = getIntersectPoint();
+        
+        if (pListIntersect.size() > 0){
+            for(Point p: pListIntersect){
+
+            }
+            return 0;
+        }else{
+
+            int isCircle = 1;
+            int x = this.resultThinningList.get(0).x;
+            int y = this.resultThinningList.get(0).y;
+            int xBegin = x;
+            int yBegin = y;
+            int xPrev = xBegin;
+            int yPrev = yBegin;
+            int dir = MAX_DIRECTION - 1;
+            ArrayList<Integer> chainCode = new ArrayList<>(); 
+            int from = 0;
+            if (dir % 2 == 0){
+                from = (dir + 7) % MAX_DIRECTION;
+            }else{
+                from = (dir + 6) % MAX_DIRECTION;
+            }
+            boolean found = false;   
+            // System.out.println("LOOP");
+            for(int i=0;i<MAX_DIRECTION;i++){
+                if (from == 0){
+                    xBegin = xPrev;
+                    yBegin = yPrev + 1;
+                }else if (from == 1){
+                    xBegin = xPrev - 1;
+                    yBegin = yPrev + 1;
+                }else if (from == 2){
+                    xBegin = xPrev - 1;
+                    yBegin = yPrev;
+                }else if (from == 3){
+                    xBegin = xPrev - 1;
+                    yBegin = yPrev - 1;
+                }else if (from == 4){
+                    xBegin = xPrev;
+                    yBegin = yPrev - 1;
+                }else if (from == 5){
+                    xBegin = xPrev + 1;
+                    yBegin = yPrev - 1;
+                }else if (from == 6){
+                    xBegin = xPrev + 1;
+                    yBegin = yPrev;
+                }else if (from == 7){
+                    xBegin = xPrev + 1;
+                    yBegin = yPrev + 1;
+                }
+
+                if ((xBegin >= 0 && xBegin < this.height) && (yBegin >= 0 && yBegin < this.width)){
+                    // System.out.println(xBegin + " " + yBegin);
+                    if (this.matrixBlackWhite[xBegin][yBegin] == 1){
+                        // System.out.println("masuk");
+                        found = true;
+                        // in case multiple object make it different method
+                        // this.matrixBlackWhite[xBegin][yBegin] = -1;
+                        // chainCodePoint.add(new Point(xBegin, yBegin));
+                    }
+                }
+
+                if (found){
+                    break;
+                }else{
+                    from = (from + 1) % MAX_DIRECTION; // counter                   
+                }
+            }
+            dir = from;
+            chainCode.add(dir);   
+                while(xBegin != x || yBegin != y){
+                    from = 0;
+                    
+                    xPrev = xBegin;
+                    yPrev = yBegin;
+                    if (dir % 2 == 0){
+                        from = (dir + 7) % MAX_DIRECTION;
+                    }else{
+                        from = (dir + 6) % MAX_DIRECTION;
+                    }
+                    found = false;
+                    // System.out.println("LOOP");
+                    for(int i=0;i<MAX_DIRECTION;i++){
+                        // System.out.println( "dir = " + from);
+                        if (from == 0){
+                            xBegin = xPrev;
+                            yBegin = yPrev + 1;
+                        }else if (from == 1){
+                            xBegin = xPrev - 1;
+                            yBegin = yPrev + 1;
+                        }else if (from == 2){
+                            xBegin = xPrev - 1;
+                            yBegin = yPrev;
+                        }else if (from == 3){
+                            xBegin = xPrev - 1;
+                            yBegin = yPrev - 1;
+                        }else if (from == 4){
+                            xBegin = xPrev;
+                            yBegin = yPrev - 1;
+                        }else if (from == 5){
+                            xBegin = xPrev + 1;
+                            yBegin = yPrev - 1;
+                        }else if (from == 6){
+                            xBegin = xPrev + 1;
+                            yBegin = yPrev;
+                        }else if (from == 7){
+                            xBegin = xPrev + 1;
+                            yBegin = yPrev + 1;
+                        }
+        
+                        if ((xBegin >= 0 && xBegin < this.height) && (yBegin >= 0 && yBegin < this.width)){
+                            // System.out.println(xBegin + " " + yBegin);
+                            if (this.matrixBlackWhite[xBegin][yBegin] == 1){
+                                // System.out.println("masuk");
+                                found = true;
+                                // this.matrixBlackWhite[xBegin][yBegin] = -1;
+                                // chainCodePoint.add(new Point(xBegin, yBegin));
+                            }
+                        }
+        
+                        if (found){
+                            break;
+                        }else{
+                            from = (from + 1) % MAX_DIRECTION;                    
+                        }
+                    }
+                    // gak mungkin not found
+                    int last = chainCode.size() - 1;
+                    if (!found || (Math.abs(chainCode.get(last) - from) == 4)){
+                        isCircle = 0;
+                        System.out.println(xBegin + " " + yBegin);
+                        break; //stop
+                    }else{
+                        dir = from;
+                        chainCode.add(dir);
+                    }            
+                }
+            return isCircle;
+        }
+    }
+
+    public int recognizeCharacterAscii(){
+        // ambil semua feature yang mungkin
+        // sementara masih 1 objek
+        // return ascii number
+        // feature direction, kuadran, gradien, isOriginOffset tertentu, intersect point, endpoint. circle
+        ArrayList<Point> pListEndPoint = getEndPoint();
+        ArrayList<Point> pListInterPoints = getIntersectPoint();
+        System.out.println("size of endpoint : " + pListEndPoint.size());
+
+        // sementara 0 - 9 (ascii 48 - 57)
+        if (pListEndPoint.size() == 0){
+            if (pListInterPoints.size() > 0){
+                return 8;
+            }else{
+                return 0;
+            }
+        }else if(pListEndPoint.size() == 1){
+            int q = getAreaQuadran(pListEndPoint.get(0));
+            System.out.println("q : " + q);
+            if (q == 2){
+                return 6;
+            }else if(q == 4){
+                return 9;
+            }else if(q == 3){
+                return 4;
+            }
+        }else if(pListEndPoint.size() == 2){
+            Point p1 = new Point();
+            Point p2 = new Point();
+            if(pListEndPoint.get(0).x <  pListEndPoint.get(1).x){
+                p1 = pListEndPoint.get(0);
+                p2 = pListEndPoint.get(1);
+            }else{
+                p2 = pListEndPoint.get(0);
+                p1 = pListEndPoint.get(1);                
+            }
+            
+            int q1 = getAreaQuadran(p1);
+            int q2 = getAreaQuadran(p2);
+            System.out.println("q1 : " + q1 + " , " + "q2 : " + q2);
+            System.out.println("dir1 : " + getDirection(p1) + " , " + "dir2 : " + getDirection(p2));
+            if (q1 == 1 && q2 == 4  && getDirection(p1) == 3 && getDirection(p2) == 2){
+                return 7;
+            }else if(q1 == 1 && q2 == 3 && getDirection(p2) == 1){
+                return 1;
+            }else if(q1 == 2 && q2 == 4){
+                return 5;
+            }else if(q1 == 1 && q2 == 3){
+                return 2;
+            }else if(q1 == 3 && q2 == 3){
+                return 4;
+            }else if(q1 == 1 && q2 == 4){
+                return 3;
+            }
+        }
+        return -1;
+    }
+
     public static void main(String[] args){
-        for(int i = 33;i<127;i++){
-            String file = i + ".png";
-            String file2 = i + "Thinning.png";
-            String out = "out.txt";
-            String out2 = "out2.txt";
+        String data[] = new String[] {"nol", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan"};
+        int threshold[] = new int[] {0, 20, 10, 0, 10, 10, 0, 5, 0, 0};
+        for(int i = 0;i<10;i++){
+            String file = data[i] + ".png";
+            String file2 = data[i] + "Thinning.png";
+            String out = data[i] + "out.txt";
+            String out2 = data[i] + "outThinning.txt";
             Writer writer = null;
             try{
                 BufferedImage img = ImageIO.read(new File(file));
@@ -782,17 +1569,26 @@ class ZhangSuen {
                 if (writer != null) {
                     writer.close();
                 }
-
                 ZhangSuen zs = new ZhangSuen(ZhangSuen.pix01, img.getWidth(), img.getHeight());
                 zs.thinImage();
                 zs.setThinningList();
                 zs.getBoundPoints();
+                // zs.printBoundedPoint();
+                System.out.println(data[i] + " :");
+                // zs.printEndpoint();
+                // zs.printAllDistanceEndPoint();
+                // System.out.println();
+                zs.postProcessingThreshold(20);
+                int c = zs.recognizeCharacterAscii();
+                System.out.println("Character : " + c);
+                // System.out.println();
+                zs.colorRedEndPoint();
                 zs.toFileAfterThinning(out2);
                 zs.toImageAfterThinning(file2);
+                System.out.println();
             }catch(IOException e){
                 e.printStackTrace();
             }
-
         }
     }
 }

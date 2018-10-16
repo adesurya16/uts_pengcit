@@ -39,6 +39,21 @@ class BorderTracer {
         this.chainCodePoint = new ArrayList<>();
     }
 
+    public void toFileChaincode(String file){
+        try{
+            Writer writer = new BufferedWriter(new FileWriter(file));
+            for (int i = 0;i< this.chainCode.size(); i++){
+                writer.write(this.chainCode.get(i) + "");
+            }
+            if (writer != null) {
+                writer.close();
+            }
+            
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+    }
+
     public void toImageAfterThinning(String file){
         try{
             BufferedImage img = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_RGB);
@@ -342,17 +357,21 @@ class BorderTracer {
 
     public static void main(String[] args){
         try{
-            String file = "dua.png";
-            String out = "duaBorder.png";
-            BufferedImage img = ImageIO.read(new File(file));
-            BorderTracer.readImage(img);
-            BorderTracer obj = new BorderTracer(BorderTracer.pix01, img.getWidth(), img.getHeight());
-            obj.mainBorderTracing();
-            obj.printChainCode();
-            obj.toImageAfterThinning(out);
+            String data[] = new String[] {"nol", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan"};
+            for(int i = 0;i < 10;i++){
+                String file = data[i] + ".png";
+                String out = data[i] + "Border.png";
+                String outTemplate = data[i] + "Template.txt";
+                BufferedImage img = ImageIO.read(new File(file));
+                BorderTracer.readImage(img);
+                BorderTracer obj = new BorderTracer(BorderTracer.pix01, img.getWidth(), img.getHeight());
+                obj.mainBorderTracing();
+                obj.printChainCode();
+                obj.toImageAfterThinning(out);
+                obj.toFileChaincode(outTemplate);
+            }
         }catch(IOException e){
             e.printStackTrace();
-            
         }
         
         // obj.printFile();
