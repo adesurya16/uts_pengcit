@@ -326,26 +326,7 @@ class ZhangSuen {
     
 
     public static void readImage(BufferedImage img, Writer writer){
-        // try{
-        // // this.height = i;
-        //     System.out.println(img.getHeight() + " " + img.getWidth());            
-        //     pix = new Color[img.getHeight()][];
-        //     for(int i = 0;i < img.getHeight();i++){
-                
-        //         pix[i] = new Color[img.getWidth()];
-
-        //         for(int j = 0;j < img.getWidth();j++){
-        //             Color c = new Color(img.getRGB(i, j));
-        //             pix[i][j] = c;
-        //         }
-        //     }
-        //     // Color c = new Color(img.getRGB(0, 0));
-        //     // System.out.println(c.getRed() + " " + c.getGreen() + " " + c.getBlue());
-        //     System.out.println(img.getHeight() + " " + img.getWidth());
-        // }catch(IOException e){
-        //     e.printStackTrace();
-        // }
-
+        
         int width = img.getHeight();
         int height = img.getWidth();
 
@@ -359,17 +340,6 @@ class ZhangSuen {
                 pix[i][j] = c;
             }
         }
-        // this.pix = new int[img.getWidth()][img.getHeight()];
-        // try{
-        //     Writer writer = new BufferedWriter("out.txt");
-            
-        // }catch(IOException e){
-        //     e.printStackTrace();
-        // }finally{
-        //     if (writer != null) {
-        //         writer.close();
-        //       }
-        // }
         
         try{
             pix01 = new int[height][];
@@ -720,6 +690,7 @@ class ZhangSuen {
     public void copyList(ArrayList<Integer> l1, ArrayList<Integer> l2){
         // copy isi l1 ke l2
         // l2 dalam keadaan kososng/empty l2
+        l2.clear();
         for(int i: l1){
             l2.add(i);
         }
@@ -1355,9 +1326,7 @@ class ZhangSuen {
         ArrayList<Point> pListIntersect = getIntersectPoint();
         
         if (pListIntersect.size() > 0){
-            for(Point p: pListIntersect){
-
-            }
+            
             return 0;
         }else{
 
@@ -1536,7 +1505,7 @@ class ZhangSuen {
             int q2 = getAreaQuadran(p2);
             System.out.println("q1 : " + q1 + " , " + "q2 : " + q2);
             System.out.println("dir1 : " + getDirection(p1) + " , " + "dir2 : " + getDirection(p2));
-            if (q1 == 1 && q2 == 4  && getDirection(p1) == 3 && getDirection(p2) == 2){
+            if (q1 == 1 && q2 == 4  && getDirection(p1) == 3 && (getDirection(p2) == 2 || getDirection(p2) == 1)){
                 return 7;
             }else if(q1 == 1 && q2 == 3 && getDirection(p2) == 1){
                 return 1;
@@ -1554,13 +1523,14 @@ class ZhangSuen {
     }
 
     public static void main(String[] args){
-        String data[] = new String[] {"nol", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan"};
+        String data[] = new String[] {"nol", "satu", "dua", "tiga", "empat", "lima", "enam", "55", "delapan", "sembilan"};
         int threshold[] = new int[] {0, 20, 10, 0, 10, 10, 0, 5, 0, 0};
-        for(int i = 0;i<10;i++){
-            String file = data[i] + ".png";
-            String file2 = data[i] + "Thinning.png";
-            String out = data[i] + "out.txt";
-            String out2 = data[i] + "outThinning.txt";
+        int thresholdCommon = 0;
+        for(int i = 65;i<91;i++){
+            String file = i + ".png";
+            String file2 = i + "Thinning.png";
+            String out = i + "out.txt";
+            String out2 = i + "outThinning.txt";
             Writer writer = null;
             try{
                 BufferedImage img = ImageIO.read(new File(file));
@@ -1574,11 +1544,11 @@ class ZhangSuen {
                 zs.setThinningList();
                 zs.getBoundPoints();
                 // zs.printBoundedPoint();
-                System.out.println(data[i] + " :");
+                System.out.println(i + " :");
                 // zs.printEndpoint();
                 // zs.printAllDistanceEndPoint();
                 // System.out.println();
-                zs.postProcessingThreshold(20);
+                zs.postProcessingThreshold(thresholdCommon);
                 int c = zs.recognizeCharacterAscii();
                 System.out.println("Character : " + c);
                 // System.out.println();
