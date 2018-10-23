@@ -79,7 +79,7 @@ class Skeleton{
         { -1, 1, 0}},
         
         // 6
-        {{ -1, 1, 0},
+        {{ -1, 0, 1},
         { 1, 1, 0},
         { 0, 1, -1}},
 
@@ -183,7 +183,10 @@ class Skeleton{
         this.height = height;
         // this.toZerolist = new ArrayList<>();
         this.resultThinningList = new ArrayList<>();
-        this.resultThinningList.addAll(pList);
+        for (Point p: pList){
+            this.resultThinningList.add(new Point(p.x, p.y));
+        }
+        // this.resultThinningList.addAll(pList);
         this.pointMax = new Point();
         this.pointMin = new Point();
 
@@ -216,7 +219,7 @@ class Skeleton{
         }
     }
 
-    public void initMatrixFromList(ArrayList<Point> plist){
+    public void initMatrixFromList(ArrayList<Point> pList){
         for(int i=0;i<this.height;i++){
             for(int j=0;j<this.width;j++){
                 this.matrixBlackWhite[i][j] = 0;
@@ -397,20 +400,20 @@ class Skeleton{
         return count;
     }
 
-    public boolean atLeastOneIsZero(int h, int w, int step){
-        int count = 0;
-        int[][] currentGroup = this.nbrGroups[step];
-        for(int i=0;i<2;i++){
-            for(int j=0;j< currentGroup[i].length;j++){
-                int[] nbr = this.iterationDirections[currentGroup[i][j]];
-                if (this.matrixBlackWhite[h + nbr[1]][w + nbr[0]] == 0){
-                    count++;
-                    break;
-                }
-            }
-        }
-        return count > 1;
-    }
+    // public boolean atLeastOneIsZero(int h, int w, int step){
+    //     int count = 0;
+    //     int[][] currentGroup = this.nbrGroups[step];
+    //     for(int i=0;i<2;i++){
+    //         for(int j=0;j< currentGroup[i].length;j++){
+    //             int[] nbr = this.iterationDirections[currentGroup[i][j]];
+    //             if (this.matrixBlackWhite[h + nbr[1]][w + nbr[0]] == 0){
+    //                 count++;
+    //                 break;
+    //             }
+    //         }
+    //     }
+    //     return count > 1;
+    // }
 
     public void setThinningList(){
         this.resultThinningList.clear();
@@ -508,7 +511,7 @@ class Skeleton{
         chainCodePoint.add(new Point(xBegin, yBegin));
         // int from;
         // ArrayList<int> chainCode = new ArrayList();
-        while(!isNeighboorValidIntersect(xBegin, yBegin) && !isValidEndPoint(xBegin, yBegin) && numNeighbors(xBegin,yBegin) > 1){
+        while(!isNeighboorValidIntersect(xBegin, yBegin) ){
             int from = 0;
             xPrev = xBegin;
             yPrev = yBegin;
@@ -564,7 +567,8 @@ class Skeleton{
 
             if(found){
                 dir = from;
-            } 
+            }
+            if(isValidEndPoint(xBegin, yBegin) || numNeighbors(xBegin, yBegin) == 1) break; 
         }
         return chainCodePoint;
     }
@@ -575,28 +579,33 @@ class Skeleton{
         // int sizeFromBounded = (this.pointMax.x - this.pointMin.x) * (this.pointMax.x - this.pointMin.x) + (this.pointMax.y - this.pointMin.y) * (this.pointMax.y - this.pointMin.y);
         // double sizeFromBounded2 = Math.sqrt((double) sizeFromBounded);
         int size = this.resultThinningList.size();
+        System.out.println("size : " + size);
         int tholdSize = (int) size * tholdPrecentage / 100;
-
+        System.out.println("thold size : " + tholdSize);
         // if (this.height > this.width){
         //     tholdSize = (int)this.height*thold / (int) 100;
         // }else{
         //     tholdSize = (int)this.width*thold / (int) 100;
         // }
         ArrayList<Point> delPoint = new ArrayList<>();
-        ArrayList<Point> pList = getEndPoint();
+        ArrayList<Point> pList = new ArrayList<>();
         boolean isChanged = true;
         while(isChanged){
             isChanged = false; 
             delPoint.clear();
             pList.clear();
-            pList = getEndPoint();
+            pList.addAll(getEndPoint());
+            System.out.println("size list end point now : " + pList.size());
+            printAllEndPoint();
             if (pList.size() > 2){
                 for(Point p : pList){
-                    if (getDistanceFromPattern(p.x, p.y) < tholdSize){
-                    // System.out.println("Deleted");
-                    isChanged = true;
-                    delPoint.addAll(getListDeleteFromEndPoint(p.x, p.y));
-                    // setThinningList();
+                    int d = getDistanceFromPattern(p.x, p.y);
+                    System.out.println("d : " + d);
+                    if (d < tholdSize){
+                        System.out.println("Deleted");
+                        isChanged = true;
+                        delPoint.addAll(getListDeleteFromEndPoint(p.x, p.y));
+                        // setThinningList();
                     }
                 }
             }
@@ -605,6 +614,7 @@ class Skeleton{
             deletePointFromList(getDeleteEndPointPattern(this.resultThinningList));
             setThinningList();
             getBoundPoints();
+            System.out.println();
         }   
     }
 
@@ -650,7 +660,8 @@ class Skeleton{
 
         // int from;
         // ArrayList<int> chainCode = new ArrayList();
-        while(!isNeighboorValidIntersect(xBegin, yBegin) && !isValidEndPoint(xBegin, yBegin) && numNeighbors(xBegin,yBegin) > 1){
+        while( !isNeighboorValidIntersect(xBegin, yBegin)){
+            // System.out.println("masuk");
             int from = 0;
             xPrev = xBegin;
             yPrev = yBegin;
@@ -718,6 +729,7 @@ class Skeleton{
             //     // this.matrixBlackWhite[xBegin][yBegin] = -1;
             //     System.out.println("intersect = " + xBegin + " , " + yBegin);
             // }
+            if(isValidEndPoint(xBegin, yBegin) || numNeighbors(xBegin, yBegin) == 1) break;
         }
         return distance;
     }
@@ -725,8 +737,8 @@ class Skeleton{
     public ArrayList<Integer> getChainCode(Point p){
         ArrayList<Integer> chainCode = new ArrayList<Integer>();
 
-        int xBegin = x;
-        int yBegin = y;
+        int xBegin = p.x;
+        int yBegin = p.y;
         int dir = MAX_DIRECTION - 1;
 
         int xPrev = xBegin;
@@ -969,7 +981,8 @@ class Skeleton{
 
             if(found){
                 dir = from;
-            } 
+            }
+             
         }
         return chainCodePoint;
     }
@@ -984,18 +997,20 @@ class Skeleton{
         int yBegin = -1;
         while(i < this.height){
             
-            j = this.width - 1;
+            int j = this.width - 1;
             boolean isFound = false;
             while(j >= 0){
                 if(this.matrixBlackWhite[i][j] == 1){
                     isFound = true;
                     break;
                 }
+                j--;
             }
             if (isFound){
                 if (xBegin == -1 && yBegin == -1){
                     xBegin = i;
                     yBegin = j;
+                    i++;
                 }else{
                     if (yBegin == j && distance == 0){
                         i++;
@@ -1026,8 +1041,13 @@ class Skeleton{
                 }  
             }else{
                 i++;
+                if (distance > minDistanceValley && dir == 1){
+                    count++;
+                }
                 dir = 0;
                 distance = 0;
+                xBegin = -1;
+                yBegin = -1;
             }
         }
         return count;
@@ -1043,18 +1063,20 @@ class Skeleton{
         int yBegin = -1;
         while(i < this.height){
             
-            j = 0;
+            int j = 0;
             boolean isFound = false;
             while(j < this.width){
                 if(this.matrixBlackWhite[i][j] == 1){
                     isFound = true;
                     break;
                 }
+                j++;
             }
             if (isFound){
                 if (xBegin == -1 && yBegin == -1){
                     xBegin = i;
                     yBegin = j;
+                    i++;
                 }else{
                     if (yBegin == j && distance == 0){
                         i++;
@@ -1086,7 +1108,13 @@ class Skeleton{
             }else{
                 i++;
                 dir = 1;
+                if (distance > minDistanceValley && dir == 0){
+                    count++;
+                }
+                xBegin = -1;
+                yBegin = -1;
                 distance = 0;
+                
             }
         }
         return count;
@@ -1102,52 +1130,68 @@ class Skeleton{
         int yBegin = -1;
         while(j < this.width){
             
-            i = this.height - 1;
+            int i = this.height - 1;
             boolean isFound = false;
             while(i >= 0){
                 if(this.matrixBlackWhite[i][j] == 1){
                     isFound = true;
                     break;
                 }
+                i--;
             }
+
             if (isFound){
+                System.out.print("i j -> ( " + i + ", " + j + " )");
                 if (xBegin == -1 && yBegin == -1){
-                    xBegin = i;
-                    yBegin = j;
+                    
+                    j++;
+                    System.out.println("Begin");
                 }else{
                     if (xBegin == i && distance == 0){
+                        System.out.println("-");
                         j++;
                     }else if(xBegin == i && distance > 0){
+                        System.out.println("-");
                         distance++;
                         j++;
                     }else if(i < xBegin && dir == 0){
+                        System.out.println("<");
                         distance++;
                         j++;
                     }else if(i > xBegin && dir == 0){
+                        System.out.println(">");
                         dir = 1;
                         distance++;
                         j++;
                     }else if(i < xBegin && dir == 1){
+                        System.out.println("<");
                         dir = 0;
                         if (distance > minDistanceValley){
                             count++;
+                            System.out.println("counted");
                         }
                         distance = 0;
                         j++;
                     }else if(i > xBegin && dir == 1){
+                        System.out.println(">");                        
                         j++;
                         distance++;
                     }
-                    xBegin = i;
-                    yBegin = j;
                     
                 }  
+                xBegin = i;
+                yBegin = j;
             }else{
                 j++;
+                if (distance > minDistanceValley && dir == 1){
+                    count++;
+                }
                 dir = 0;
                 distance = 0;
+                xBegin = -1;
+                yBegin = -1;
             }
-        }
+        }        
         return count;
     }
 
@@ -1161,18 +1205,21 @@ class Skeleton{
         int yBegin = -1;
         while(j < this.width){
             
-            i = 0;
+            int i = 0;
             boolean isFound = false;
             while(i < this.height){
                 if(this.matrixBlackWhite[i][j] == 1){
                     isFound = true;
                     break;
                 }
+                i++;
             }
+
             if (isFound){
                 if (xBegin == -1 && yBegin == -1){
                     xBegin = i;
                     yBegin = j;
+                    j++;
                 }else{
                     if (xBegin == i && distance == 0){
                         j++;
@@ -1190,7 +1237,7 @@ class Skeleton{
                         distance = 0;
                         j++;
                     }else if(i < xBegin && dir == 1){
-                        dir = 0;
+                        dir = 1;
                         distance++;
                         j++;
                     }else if(i > xBegin && dir == 1){
@@ -1203,10 +1250,62 @@ class Skeleton{
                 }  
             }else{
                 j++;
+                if (distance > minDistanceValley && dir == 0){
+                    count++;
+                }
                 dir = 1;
                 distance = 0;
+                xBegin = -1;
+                yBegin = -1;
             }
         }
         return count;
+    }
+
+    public void printAllDistanceEndPoint(){
+        ArrayList<Point> pList = getEndPoint();
+        for(int i=0;i<pList.size();i++){
+            System.out.print("(" + pList.get(i).x + ", " + pList.get(i).y + ") : ");
+            Point p = pList.get(i);
+            int n = getDistanceFromPattern(p.x, p.y);
+            System.out.println(n);
+        }
+        
+        // delete soon
+        // this.matrixBlackWhite[64][205] = -1;
+    }
+
+    public void printAllEndPoint(){
+        ArrayList<Point> pListEndPoint = getEndPoint();
+        for(Point p:pListEndPoint){
+            System.out.println("(" + p.x + ", " + p.y + ")");
+        }
+    }
+
+    public void printAllIntersectPoint(){
+        ArrayList<Point> pListIntersect = getIntersectPoint();
+        for(Point p:pListIntersect){
+            System.out.println("(" + p.x + ", " + p.y + ")");
+        }
+    }
+
+    public void toFileAfterThinning(String file){
+        try{
+            Writer writer = new BufferedWriter(new FileWriter(file));
+            for(int i =0;i<this.height;i++){
+                for(int j=0;j<this.width;j++){
+    //                Log.d("isi matrix : ", " " + matrix[i][j]);
+                    // this.matrixBlackWhite[i][j] = matrix[i][j];
+                    writer.write(this.matrixBlackWhite[i][j] + "");
+                }
+                writer.write("\n");
+            }
+            if (writer != null) {
+                writer.close();
+            }
+            
+        }catch(IOException e){
+            e.printStackTrace();
+        }
     }
 }

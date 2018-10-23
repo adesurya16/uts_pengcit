@@ -81,7 +81,7 @@ class ZhangSuen {
         { -1, 1, 0}},
         
         // 6
-        {{ -1, 1, 0},
+        {{ -1, 0, 1},
         { 1, 1, 0},
         { 0, 1, -1}},
 
@@ -218,6 +218,8 @@ class ZhangSuen {
         }
         return false;
     }
+
+    
 
     public ArrayList<Point> getIntersectPoint(){
         ArrayList<Point> pList = new ArrayList<>();
@@ -1526,7 +1528,7 @@ class ZhangSuen {
         String data[] = new String[] {"nol", "satu", "dua", "tiga", "empat", "lima", "enam", "55", "delapan", "sembilan"};
         int threshold[] = new int[] {0, 20, 10, 0, 10, 10, 0, 5, 0, 0};
         int thresholdCommon = 0;
-        for(int i = 65;i<91;i++){
+        for(int i = 36;i<37;i++){
             String file = i + ".png";
             String file2 = i + "Thinning.png";
             String out = i + "out.txt";

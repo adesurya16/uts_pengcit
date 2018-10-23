@@ -36,7 +36,7 @@ class Collection{
 
     private ArrayList<Point> toZerolist;
 
-    public Collection(int matrixBlackWhite[][], int height, int width){
+    public Collection(int matrix[][], int height, int width){
         this.width = width;
         this.height = height;
 
@@ -53,7 +53,7 @@ class Collection{
             }
         }
         this.toZerolist = new ArrayList<>();
-        // this.resultThinningList = new ArrayList<>();
+        this.resultThinningList = new ArrayList<>();
         this.pointMax = new Point();
         this.pointMin = new Point();
         this.objectsSkeletons = new ArrayList<>();
@@ -83,6 +83,19 @@ class Collection{
         return this.height;
     }
 
+    public void toZeroMatrix(){
+        for(int i =0;i<this.height;i++){
+            for(int j=0;j<this.width;j++){
+                this.matrixBlackWhite[i][j] = 0;
+            }
+        }
+    }
+    public void addListToMatrix(ArrayList<Point> pList){
+        for(Point p: pList){
+            this.matrixBlackWhite[p.x][p.y] = 1;
+        }
+    }
+
     public void copyToMatrix(int matrix[][]){
         for(int i =0;i<this.height;i++){
             for(int j=0;j<this.width;j++){
@@ -107,6 +120,8 @@ class Collection{
         }
         return matrix2;
     }
+
+    
 
     public void thinImage(){
         boolean firstStep = true;
@@ -192,9 +207,10 @@ class Collection{
     }
 
     public void setThinningList(){
+        // if (this.resultThinningList.size() > 0)
         this.resultThinningList.clear();
-        for(int i=0;i<height;i++){
-            for(int j=0;j<width;j++){
+        for(int i=0;i<this.height;i++){
+            for(int j=0;j<this.width;j++){
                 if (this.matrixBlackWhite[i][j] == 1){
                     this.resultThinningList.add(new Point(i, j));
                 }
@@ -285,6 +301,7 @@ class Collection{
 
     public void postProcessingThresholdAll(){
         for (Skeleton s: this.objectsSkeletons){
+            // System.out.println("call");
             s.postProcessingThreshold(THRESHOLD_COMMON);
         }
     }
@@ -343,7 +360,7 @@ class Collection{
         int yBegin = -1;
         while(i < this.height){
             
-            j = this.width - 1;
+            int j = this.width - 1;
             boolean isFound = false;
             while(j >= 0){
                 if(this.matrixBlackWhite[i][j] == 1){
@@ -402,7 +419,7 @@ class Collection{
         int yBegin = -1;
         while(i < this.height){
             
-            j = 0;
+            int j = 0;
             boolean isFound = false;
             while(j < this.width){
                 if(this.matrixBlackWhite[i][j] == 1){
@@ -461,7 +478,7 @@ class Collection{
         int yBegin = -1;
         while(j < this.width){
             
-            i = this.height - 1;
+            int i = this.height - 1;
             boolean isFound = false;
             while(i >= 0){
                 if(this.matrixBlackWhite[i][j] == 1){
@@ -520,7 +537,7 @@ class Collection{
         int yBegin = -1;
         while(j < this.width){
             
-            i = 0;
+            int i = 0;
             boolean isFound = false;
             while(i < this.height){
                 if(this.matrixBlackWhite[i][j] == 1){
@@ -569,26 +586,42 @@ class Collection{
         return count;
     }
 
+    public void printAllDistanceEndPointSkeletons(){
+        for(Skeleton s:this.objectsSkeletons){
+            s.printAllDistanceEndPoint();
+            System.out.println();
+        }
+    }
+
+    public void printAllIntersectPointSkeletons(){
+        for(Skeleton s:this.objectsSkeletons){
+            s.printAllIntersectPoint();
+            System.out.println();
+        }
+    }
+
     public int recognizeCharacterAscii(){
         
         // feature direction, kuadran, gradien, isOriginOffset tertentu, intersect point, endpoint. circle
         if (this.objectsSkeletons.size() == 1){
-            // System.out.println("1 objek");
-            Skeleton s = objectsSkeletons.get(0);
+            System.out.println("1 objek");
+            Skeleton s = this.objectsSkeletons.get(0);
             ArrayList<Point> pListEndPoint = s.getEndPoint();
             ArrayList<Point> pListInterPoints = s.getIntersectPoint();
+            System.out.println("valley : " + s.getValleyFromDown()); 
+            System.out.println("jmlh end point : " + pListEndPoint.size());           
             // System.out.println("size of endpoint : " + pListEndPoint.size());
 
             // sementara 0 - 9 (ascii 48 - 57)
             if (pListEndPoint.size() == 0){
-                int c = s.getCircle() == 1
+                int c = s.getCircle();
                 if(c == 1){
                     return 0;
                 }else if (pListInterPoints.size() > 0 && c == 2){
                     return 8;
                 }
             }else if(pListEndPoint.size() == 1){
-                int q = getAreaQuadran(pListEndPoint.get(0));
+                int q = s.getAreaQuadran(pListEndPoint.get(0));
                 // System.out.println("q : " + q);
                 if (q == 2){
                     return 6;
@@ -608,13 +641,13 @@ class Collection{
                     p1 = pListEndPoint.get(1);                
                 }
                 
-                int q1 = getAreaQuadran(p1);
-                int q2 = getAreaQuadran(p2);
+                int q1 = s.getAreaQuadran(p1);
+                int q2 = s.getAreaQuadran(p2);
                 // System.out.println("q1 : " + q1 + " , " + "q2 : " + q2);
                 // System.out.println("dir1 : " + getDirection(p1) + " , " + "dir2 : " + getDirection(p2));
-                if (q1 == 1 && q2 == 4  && getDirection(p1) == 3 && (getDirection(p2) == 2 || getDirection(p2) == 1)){
+                if (q1 == 1 && q2 == 4  && s.getDirection(p1) == 3 && (s.getDirection(p2) == 2 || s.getDirection(p2) == 1)){
                     return 7;
-                }else if(q1 == 1 && q2 == 3 && getDirection(p2) == 1){
+                }else if(q1 == 1 && q2 == 3 && s.getDirection(p2) == 1){
                     return 1;
                 }else if(q1 == 2 && q2 == 4){
                     return 5;
@@ -627,12 +660,82 @@ class Collection{
                 }
             }
             return -1;
-        }else{
+        }else if (this.objectsSkeletons.size() == 2){
+            System.out.println("2 objek");
             return -1;
+        }else if (this.objectsSkeletons.size() == 3){
+            System.out.println("3 objek");            
+            return -1;
+        }else return -1;
+    }
+
+    public void toImageAfterThinning(String file){
+        try{
+            BufferedImage img = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_RGB);
+            File f = new File(file);
+            int px;
+            for(int i=0;i<this.height;i++){
+                for(int j=0;j<this.width;j++){
+                    // R G B
+                    if(this.matrixBlackWhite[i][j] == 1){ //B
+                        px = 0;
+                        int col = (px << 16) | (px << 8) | px;
+                        img.setRGB(j, i, col);
+                    }else if(this.matrixBlackWhite[i][j] == 0){ //W
+                        px = 255;
+                        int col = (px << 16) | (px << 8) | px;
+                        img.setRGB(j, i, col);
+                    }else{ //R
+                        int col = (255 << 16) | (0 << 8) | 0;
+                        img.setRGB(j, i, col);
+                    }
+                    
+                }
+            }
+            ImageIO.write(img, "PNG", f);
+        }catch(Exception e){
+            e.printStackTrace();
         }
     }
+    
+    public void getUpdateMatrix(){
+        toZeroMatrix();
+        for(Skeleton s:this.objectsSkeletons){
+            addListToMatrix(s.getResultThinningList());
+        }
+    }
+
+    public void toFileAfterThinning(String file){
+        try{
+            Writer writer = new BufferedWriter(new FileWriter(file));
+            for(int i =0;i<this.height;i++){
+                for(int j=0;j<this.width;j++){
+    //                Log.d("isi matrix : ", " " + matrix[i][j]);
+                    // this.matrixBlackWhite[i][j] = matrix[i][j];
+                    writer.write(this.matrixBlackWhite[i][j] + "");
+                }
+                writer.write("\n");
+            }
+            if (writer != null) {
+                writer.close();
+            }
+            
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    public void toFileSkeleton(String file){
+        int i = 0;
+        for(Skeleton s:this.objectsSkeletons){
+            i++;
+            s.toFileAfterThinning("skeleton" + i + file);
+        }
+    }
+
     public static void main(String[] args){
-        for(int i = 65;i<66;i++){
+        int caseAscii = 109;
+        for(int i = caseAscii;i<caseAscii+1;i++){
             String file = i + ".png";
             String file2 = i + "Thinning.png";
             String out = i + "out.txt";
@@ -649,10 +752,22 @@ class Collection{
                 Collection cs = new Collection(Collection.pix01, img.getWidth(), img.getHeight());
                 cs.thinImage();
                 cs.setThinningList();
-                cs.getBoundPoints();
+                cs.getBoundPoints();    
                 cs.getSkeletons();
                 cs.postProcessingThresholdAll();
-                int c = zs.recognizeCharacterAscii();
+                
+                // cs.toFileSkeleton(out);
+                // System.out.println("Distance : ");
+                // cs.printAllDistanceEndPointSkeletons();
+                // System.out.println("Intersect : ");                
+                // cs.printAllIntersectPointSkeletons();
+                
+                cs.getUpdateMatrix();
+                cs.toFileAfterThinning(out2);
+                cs.toImageAfterThinning(file2);
+                
+                
+                int c = cs.recognizeCharacterAscii();
                 System.out.println("Character : " + c);
             }catch(IOException e){
                 e.printStackTrace();
