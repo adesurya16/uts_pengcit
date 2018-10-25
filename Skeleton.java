@@ -880,27 +880,60 @@ class Skeleton{
     }
 
     public int getCircle(){
+        System.out.println("Circle Process");
         ArrayList<Point> pListResultSaved = new ArrayList<>();
         ArrayList<Point> pListEndPoint = getEndPoint();
         ArrayList<Point> delPoint = new ArrayList<>();
         
+        pListResultSaved.addAll(pListEndPoint);
+
         for (Point p : pListEndPoint){
             delPoint.addAll(getListDeleteFromEndPoint(p.x, p.y));
         }
-        deletePointFromList(delPoint);
-        deletePointFromList(getDeleteSisaPoint(pListEndPoint, this.resultThinningList));
-        deletePointFromList(getDeleteEndPointPattern(this.resultThinningList));
-        setThinningList();
-        getBoundPoints();
+        
+        
+        if (delPoint.size() > 0){
+            deletePointFromList(delPoint);
+            deletePointFromList(getDeleteSisaPoint(pListEndPoint, this.resultThinningList));
+            deletePointFromList(getDeleteEndPointPattern(this.resultThinningList));
+            setThinningList();
+            getBoundPoints();
+        }
+        
+        if (this.resultThinningList.size() == 0){
+            return 0;
+        }
 
+        pListEndPoint = getEndPoint();
+        System.out.println("End Point sementara : " + pListEndPoint.size());
         // int hole = 0;
         ArrayList<Point> pListIntersect = getIntersectPoint();
+        System.out.println("Intersect Point sementara : " + pListIntersect.size());
+        
         int count = 1;
         for(Point p : pListIntersect){
             if (isValidIntersectPoint(p.x, p.y)){
-                deletePointFromList(getListDeleteFromIntersectPoint(p.x, p.y));
-                // setThinningList();
-                // getBoundPoints();
+                delPoint = getListDeleteFromIntersectPoint(p.x, p.y);
+                System.out.println("Deleted sebanyak : " + delPoint.size()); 
+                deletePointFromList(delPoint);
+                deletePointFromList(getDeleteSisaPoint(pListEndPoint, this.resultThinningList));
+                deletePointFromList(getDeleteEndPointPattern(this.resultThinningList));
+                delPoint.clear();
+                pListEndPoint = getEndPoint();
+                for (Point pp : pListEndPoint){
+                    delPoint.addAll(getListDeleteFromEndPoint(pp.x, pp.y));
+                }
+                
+                
+                if (delPoint.size() > 0){
+                    deletePointFromList(delPoint);
+                    deletePointFromList(getDeleteSisaPoint(pListEndPoint, this.resultThinningList));
+                    deletePointFromList(getDeleteEndPointPattern(this.resultThinningList));
+                    setThinningList();
+                    getBoundPoints();
+                }
+                // cek
+                toFileAfterThinning("processCircle" + count);
                 count++;
             }
         }
@@ -925,7 +958,9 @@ class Skeleton{
         // chainCodePoint.add(new Point(xBegin, yBegin));
         // int from;
         // ArrayList<int> chainCode = new ArrayList();
-        while(!isNeighboorValidIntersect(xBegin, yBegin) && !isValidEndPoint(xBegin, yBegin) && numNeighbors(xBegin,yBegin) > 1){
+        int iDis = 0;
+        while(!isNeighboorValidIntersect(xBegin, yBegin) || iDis < 2){
+            iDis++;
             int from = 0;
             xPrev = xBegin;
             yPrev = yBegin;
@@ -1141,39 +1176,39 @@ class Skeleton{
             }
 
             if (isFound){
-                System.out.print("i j -> ( " + i + ", " + j + " )");
+                // System.out.print("i j -> ( " + i + ", " + j + " )");
                 if (xBegin == -1 && yBegin == -1){
                     
                     j++;
-                    System.out.println("Begin");
+                    // System.out.println("Begin");
                 }else{
                     if (xBegin == i && distance == 0){
-                        System.out.println("-");
+                        // System.out.println("-");
                         j++;
                     }else if(xBegin == i && distance > 0){
-                        System.out.println("-");
+                        // System.out.println("-");
                         distance++;
                         j++;
                     }else if(i < xBegin && dir == 0){
-                        System.out.println("<");
+                        // System.out.println("<");
                         distance++;
                         j++;
                     }else if(i > xBegin && dir == 0){
-                        System.out.println(">");
+                        // System.out.println(">");
                         dir = 1;
                         distance++;
                         j++;
                     }else if(i < xBegin && dir == 1){
-                        System.out.println("<");
+                        // System.out.println("<");
                         dir = 0;
                         if (distance > minDistanceValley){
                             count++;
-                            System.out.println("counted");
+                            // System.out.println("counted");
                         }
                         distance = 0;
                         j++;
                     }else if(i > xBegin && dir == 1){
-                        System.out.println(">");                        
+                        // System.out.println(">");                        
                         j++;
                         distance++;
                     }

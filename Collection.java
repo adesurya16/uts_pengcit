@@ -21,7 +21,7 @@ class Collection{
     private int height;
     private ArrayList<Point> resultThinningList;
 
-    private final int THRESHOLD_COMMON = 10;
+    private final int THRESHOLD_COMMON = 5;
     // private ArrayList<Integer> chainCode;
     private Point pointMax;
     private Point pointMin;
@@ -608,13 +608,15 @@ class Collection{
             Skeleton s = this.objectsSkeletons.get(0);
             ArrayList<Point> pListEndPoint = s.getEndPoint();
             ArrayList<Point> pListInterPoints = s.getIntersectPoint();
-            System.out.println("valley : " + s.getValleyFromDown()); 
+            // System.out.println("valley : " + s.getValleyFromDown()); 
             System.out.println("jmlh end point : " + pListEndPoint.size());           
             // System.out.println("size of endpoint : " + pListEndPoint.size());
 
             // sementara 0 - 9 (ascii 48 - 57)
+            int c = s.getCircle();
+            System.out.println("Circle : " + c);
             if (pListEndPoint.size() == 0){
-                int c = s.getCircle();
+                
                 if(c == 1){
                     return 0;
                 }else if (pListInterPoints.size() > 0 && c == 2){
@@ -729,12 +731,12 @@ class Collection{
         int i = 0;
         for(Skeleton s:this.objectsSkeletons){
             i++;
-            s.toFileAfterThinning("skeleton" + i + file);
+            s.toFileAfterThinning("skeletonKe" + i + "For" + file);
         }
     }
 
     public static void main(String[] args){
-        int caseAscii = 109;
+        int caseAscii = 38;
         for(int i = caseAscii;i<caseAscii+1;i++){
             String file = i + ".png";
             String file2 = i + "Thinning.png";
@@ -756,7 +758,7 @@ class Collection{
                 cs.getSkeletons();
                 cs.postProcessingThresholdAll();
                 
-                // cs.toFileSkeleton(out);
+                cs.toFileSkeleton(out);
                 // System.out.println("Distance : ");
                 // cs.printAllDistanceEndPointSkeletons();
                 // System.out.println("Intersect : ");                
