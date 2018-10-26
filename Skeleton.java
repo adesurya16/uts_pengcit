@@ -574,7 +574,8 @@ class Skeleton{
     }
 
     public void postProcessingThreshold(int tholdPrecentage){
-        // thold percentage from longer width or height   
+        // thold percentage from longer width or height
+        System.out.println("Post Processing using threshold process (Only 1 shape skeleton)");   
         getBoundPoints();
         // int sizeFromBounded = (this.pointMax.x - this.pointMin.x) * (this.pointMax.x - this.pointMin.x) + (this.pointMax.y - this.pointMin.y) * (this.pointMax.y - this.pointMin.y);
         // double sizeFromBounded2 = Math.sqrt((double) sizeFromBounded);
@@ -880,7 +881,7 @@ class Skeleton{
     }
 
     public int getCircle(){
-        System.out.println("Circle Process");
+        // System.out.println("Circle Process");
         ArrayList<Point> pListResultSaved = new ArrayList<>();
         ArrayList<Point> pListEndPoint = getEndPoint();
         ArrayList<Point> delPoint = new ArrayList<>();
@@ -905,16 +906,16 @@ class Skeleton{
         }
 
         pListEndPoint = getEndPoint();
-        System.out.println("End Point sementara : " + pListEndPoint.size());
+        // System.out.println("End Point sementara : " + pListEndPoint.size());
         // int hole = 0;
         ArrayList<Point> pListIntersect = getIntersectPoint();
-        System.out.println("Intersect Point sementara : " + pListIntersect.size());
+        // System.out.println("Intersect Point sementara : " + pListIntersect.size());
         
         int count = 1;
         for(Point p : pListIntersect){
             if (isValidIntersectPoint(p.x, p.y)){
                 delPoint = getListDeleteFromIntersectPoint(p.x, p.y);
-                System.out.println("Deleted sebanyak : " + delPoint.size()); 
+                // System.out.println("Deleted sebanyak : " + delPoint.size()); 
                 deletePointFromList(delPoint);
                 deletePointFromList(getDeleteSisaPoint(pListEndPoint, this.resultThinningList));
                 deletePointFromList(getDeleteEndPointPattern(this.resultThinningList));

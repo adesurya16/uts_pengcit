@@ -302,7 +302,9 @@ class Collection{
     public void postProcessingThresholdAll(){
         for (Skeleton s: this.objectsSkeletons){
             // System.out.println("call");
-            s.postProcessingThreshold(THRESHOLD_COMMON);
+            if (s.getResultThinningList().size() > 2){
+                s.postProcessingThreshold(THRESHOLD_COMMON);
+            }
         }
     }
 
@@ -350,242 +352,7 @@ class Collection{
         
     }
 
-    public int getValleyFromRight(){
-        int minDistanceValley = 5;
-        int i = 0;
-        int count = 0;
-        int distance = 0;
-        int dir = 0;
-        int xBegin = -1;
-        int yBegin = -1;
-        while(i < this.height){
-            
-            int j = this.width - 1;
-            boolean isFound = false;
-            while(j >= 0){
-                if(this.matrixBlackWhite[i][j] == 1){
-                    isFound = true;
-                    break;
-                }
-            }
-            if (isFound){
-                if (xBegin == -1 && yBegin == -1){
-                    xBegin = i;
-                    yBegin = j;
-                }else{
-                    if (yBegin == j && distance == 0){
-                        i++;
-                    }else if(yBegin == j && distance > 0){
-                        distance++;
-                        i++;
-                    }else if(j < yBegin && dir == 0){
-                        distance++;
-                        i++;
-                    }else if(j > yBegin && dir == 0){
-                        dir = 1;
-                        distance++;
-                        i++;
-                    }else if(j < yBegin && dir == 1){
-                        dir = 0;
-                        if (distance > minDistanceValley){
-                            count++;
-                        }
-                        distance = 0;
-                        i++;
-                    }else if(j > yBegin && dir == 1){
-                        i++;
-                        distance++;
-                    }
-                    xBegin = i;
-                    yBegin = j;
-                    
-                }  
-            }else{
-                i++;
-                dir = 0;
-                distance = 0;
-            }
-        }
-        return count;
-    }
-
-    public int getValleyFromLeft(){
-        int minDistanceValley = 5;
-        int i = 0;
-        int count = 0;
-        int distance = 0;
-        int dir = 1;
-        int xBegin = -1;
-        int yBegin = -1;
-        while(i < this.height){
-            
-            int j = 0;
-            boolean isFound = false;
-            while(j < this.width){
-                if(this.matrixBlackWhite[i][j] == 1){
-                    isFound = true;
-                    break;
-                }
-            }
-            if (isFound){
-                if (xBegin == -1 && yBegin == -1){
-                    xBegin = i;
-                    yBegin = j;
-                }else{
-                    if (yBegin == j && distance == 0){
-                        i++;
-                    }else if(yBegin == j && distance > 0){
-                        distance++;
-                        i++;
-                    }else if(j < yBegin && dir == 0){
-                        distance++;
-                        i++;
-                    }else if(j > yBegin && dir == 0){
-                        dir = 1;
-                        if (distance > minDistanceValley){
-                            count++;
-                        }
-                        distance = 0;
-                        i++;
-                    }else if(j > yBegin && dir == 1){
-                        dir = 0;    
-                        distance = 0;
-                        i++;
-                    }else if(j < yBegin && dir == 1){
-                        i++;
-                        distance++;
-                    }
-                    xBegin = i;
-                    yBegin = j;
-                    
-                }  
-            }else{
-                i++;
-                dir = 1;
-                distance = 0;
-            }
-        }
-        return count;
-    }
-
-    public int getValleyFromDown(){
-        int minDistanceValley = 5;
-        int j = 0;
-        int count = 0;
-        int distance = 0;
-        int dir = 0;
-        int xBegin = -1;
-        int yBegin = -1;
-        while(j < this.width){
-            
-            int i = this.height - 1;
-            boolean isFound = false;
-            while(i >= 0){
-                if(this.matrixBlackWhite[i][j] == 1){
-                    isFound = true;
-                    break;
-                }
-            }
-            if (isFound){
-                if (xBegin == -1 && yBegin == -1){
-                    xBegin = i;
-                    yBegin = j;
-                }else{
-                    if (xBegin == i && distance == 0){
-                        j++;
-                    }else if(xBegin == i && distance > 0){
-                        distance++;
-                        j++;
-                    }else if(i < xBegin && dir == 0){
-                        distance++;
-                        j++;
-                    }else if(i > xBegin && dir == 0){
-                        dir = 1;
-                        distance++;
-                        j++;
-                    }else if(i < xBegin && dir == 1){
-                        dir = 0;
-                        if (distance > minDistanceValley){
-                            count++;
-                        }
-                        distance = 0;
-                        j++;
-                    }else if(i > xBegin && dir == 1){
-                        j++;
-                        distance++;
-                    }
-                    xBegin = i;
-                    yBegin = j;
-                    
-                }  
-            }else{
-                j++;
-                dir = 0;
-                distance = 0;
-            }
-        }
-        return count;
-    }
-
-    public int getValleyFromUp(){
-        int minDistanceValley = 5;
-        int j = 0;
-        int count = 0;
-        int distance = 0;
-        int dir = 1;
-        int xBegin = -1;
-        int yBegin = -1;
-        while(j < this.width){
-            
-            int i = 0;
-            boolean isFound = false;
-            while(i < this.height){
-                if(this.matrixBlackWhite[i][j] == 1){
-                    isFound = true;
-                    break;
-                }
-            }
-            if (isFound){
-                if (xBegin == -1 && yBegin == -1){
-                    xBegin = i;
-                    yBegin = j;
-                }else{
-                    if (xBegin == i && distance == 0){
-                        j++;
-                    }else if(xBegin == i && distance > 0){
-                        distance++;
-                        j++;
-                    }else if(i < xBegin && dir == 0){
-                        distance++;
-                        j++;
-                    }else if(i > xBegin && dir == 0){
-                        dir = 1;
-                        if (distance > minDistanceValley){
-                            count++;
-                        }
-                        distance = 0;
-                        j++;
-                    }else if(i < xBegin && dir == 1){
-                        dir = 0;
-                        distance++;
-                        j++;
-                    }else if(i > xBegin && dir == 1){
-                        j++;
-                        distance++;
-                    }
-                    xBegin = i;
-                    yBegin = j;
-                    
-                }  
-            }else{
-                j++;
-                dir = 1;
-                distance = 0;
-            }
-        }
-        return count;
-    }
-
+    
     public void printAllDistanceEndPointSkeletons(){
         for(Skeleton s:this.objectsSkeletons){
             s.printAllDistanceEndPoint();
@@ -608,7 +375,14 @@ class Collection{
             Skeleton s = this.objectsSkeletons.get(0);
             ArrayList<Point> pListEndPoint = s.getEndPoint();
             ArrayList<Point> pListInterPoints = s.getIntersectPoint();
-            // System.out.println("valley : " + s.getValleyFromDown()); 
+            int down = s.getValleyFromDown();
+            int up = s.getValleyFromUp();
+            int left = s.getValleyFromLeft();
+            int right = s.getValleyFromRight();
+            System.out.println("valley down : " + down); 
+            System.out.println("valley up : " + up); 
+            System.out.println("valley left : " + left);
+            System.out.println("valley right : " + right); 
             System.out.println("jmlh end point : " + pListEndPoint.size());           
             // System.out.println("size of endpoint : " + pListEndPoint.size());
 
@@ -618,19 +392,30 @@ class Collection{
             if (pListEndPoint.size() == 0){
                 
                 if(c == 1){
-                    return 0;
-                }else if (pListInterPoints.size() > 0 && c == 2){
-                    return 8;
+                    if ( (this.pointMax.x - this.pointMin.x) - (this.pointMax.y - this.pointMin.y) < 3){
+                        return 79;
+                    }else return 48;
+                }else if (pListInterPoints.size() == 2 && c == 2){
+                    return 56;
                 }
             }else if(pListEndPoint.size() == 1){
+                if(this.resultThinningList.size() == 1){
+                    return 46;
+                }
                 int q = s.getAreaQuadran(pListEndPoint.get(0));
                 // System.out.println("q : " + q);
-                if (q == 2){
-                    return 6;
-                }else if(q == 4){
-                    return 9;
-                }else if(q == 3){
-                    return 4;
+                if (q == 2 && c == 1){
+                    return 54;
+                }else if(q == 4 && c == 1){
+                    return 57;
+                }
+                ArrayList<Point> pListIntersect= s.getIntersectPoint();
+                if(q == 3 && c == 1 && pListIntersect.size() == 1 && pListIntersect.get(0).y == pListEndPoint.get(0).y){
+                    return 52;
+                }else if(q == 3 && c == 1 && pListIntersect.size() == 1 && s.getDistanceFromPattern(pListEndPoint.get(0).x, pListEndPoint.get(0).y) > s.getResultThinningList().size() / 2){
+                    return 64;
+                }else if(q == 3 && c == 1 && pListIntersect.size() == 1 && s.getDistanceFromPattern(pListEndPoint.get(0).x, pListEndPoint.get(0).y) > s.getResultThinningList().size() / 4){
+                    return 81;
                 }
             }else if(pListEndPoint.size() == 2){
                 Point p1 = new Point();
@@ -647,26 +432,145 @@ class Collection{
                 int q2 = s.getAreaQuadran(p2);
                 // System.out.println("q1 : " + q1 + " , " + "q2 : " + q2);
                 // System.out.println("dir1 : " + getDirection(p1) + " , " + "dir2 : " + getDirection(p2));
-                if (q1 == 1 && q2 == 4  && s.getDirection(p1) == 3 && (s.getDirection(p2) == 2 || s.getDirection(p2) == 1)){
-                    return 7;
-                }else if(q1 == 1 && q2 == 3 && s.getDirection(p2) == 1){
-                    return 1;
-                }else if(q1 == 2 && q2 == 4){
-                    return 5;
-                }else if(q1 == 1 && q2 == 3){
-                    return 2;
+                if(p1.y == p2.y && p2.x < this.height/2){
+                    return 39;
+                }else if(p1.x > this.height/2 && p2.x < this.height/2 && left == 0 && right == 0 && p1.y == p2.y){
+                    return 73;
+                }else if(p1.x > this.height/2 && p2.x < this.height/2 && left == 1){
+                    return 44;
+                }else if(p1.x == p2.x && up == 0 && down == 0){
+                    return 45;
+                }else if(p1.y > this.width/2 && p2.y < this.width/2 && up == 1 && down == 1){
+                    return 126;
+                }else if(p2.x > this.height/2 && q1 == 1 && q2 == 3 && left == 0 && right == 0){
+                    return 96;
+                }else if(c == 2 && q1 == 2 && q2 == 4){
+                    return 36;
+                }else if (c == 2 && q1 == q2 && q1 == 3){
+                    return 38;
                 }else if(q1 == 3 && q2 == 3){
-                    return 4;
-                }else if(q1 == 1 && q2 == 4){
-                    return 3;
+                    return 52;
+                }else if(q1 == 1 && q2 == 3){
+                    return 50;
+                }else if( ((q1 == 1 && q2 == 2) || (q2 == 1 && q1 == 2)) && up == 1){
+                    return 85;
+                }
+
+                // if (q1 == 1 && q2 == 4  && s.getDirection(p1) == 3 && (s.getDirection(p2) == 2 || s.getDirection(p2) == 1)){
+                //     return 7;
+                // }else if(q1 == 1 && q2 == 3 && s.getDirection(p2) == 1){
+                //     return 1;
+                // }else if(q1 == 2 && q2 == 4){
+                //     return 5;
+                // }else if(q1 == 1 && q2 == 3){
+                //     return 2;
+                // }else if(q1 == 3 && q2 == 3){
+                //     return 4;
+                // }else if(q1 == 1 && q2 == 4){
+                //     return 3;
+                // }
+            }else{
+                ArrayList<Point> pListIntersect = s.getIntersectPoint();
+                if(c == 1 && pListEndPoint.size() == 8 && pListIntersect.size() == 4){
+                    return 35;
+                }else if(c == 2 && pListEndPoint.size() == 4 && pListIntersect.size() == 3){
+                    return 36;
+                }else if(c == 0 && pListEndPoint.size() == 5){
+                    return 42;
                 }
             }
             return -1;
         }else if (this.objectsSkeletons.size() == 2){
-            System.out.println("2 objek");
+            // System.out.println("2 objek");
+            System.out.println(this.objectsSkeletons.get(0).getResultThinningList().size());
+            System.out.println(this.objectsSkeletons.get(1).getResultThinningList().size());
+            if(this.objectsSkeletons.get(0).getResultThinningList().size() - this.objectsSkeletons.get(1).getResultThinningList().size() < 5){
+                // System.out.println("2 objek sama");
+                if(this.objectsSkeletons.get(0).getResultThinningList().size() < 3 && this.objectsSkeletons.get(1).getResultThinningList().size() < 3){
+                    return 58;
+                }else if(this.objectsSkeletons.get(0).getResultThinningList().get(this.objectsSkeletons.get(0).getResultThinningList().size() - 1).x < this.height/2 &&
+                this.objectsSkeletons.get(1).getResultThinningList().get(this.objectsSkeletons.get(1).getResultThinningList().size() - 1).x < this.height/2
+                ){
+                    return 34;
+                }
+                
+            }else{
+                Skeleton s1 = null;
+                Skeleton s2 = null;
+                if(this.objectsSkeletons.get(0).getResultThinningList().size() > this.objectsSkeletons.get(0).getResultThinningList().size()){
+                    s1 = this.objectsSkeletons.get(0);
+                    s2 = this.objectsSkeletons.get(1);
+                }else{
+                    s2 = this.objectsSkeletons.get(0);
+                    s1 = this.objectsSkeletons.get(1);
+                }
+                if(s1.getEndPoint().size() == 2 && s2.getResultThinningList().size() == 1){
+                    Point p1 = new Point();
+                    Point p2 = new Point();
+                    
+                    if(s1.getEndPoint().get(0).x < s1.getEndPoint().get(1).x){
+                        p1 = s1.getEndPoint().get(0);
+                        p2 = s1.getEndPoint().get(1);
+                    }else{
+                        p1 = s1.getEndPoint().get(1);
+                        p2 = s1.getEndPoint().get(0);
+                    }
+                    int left = s1.getValleyFromLeft();
+                    Point p3 = new Point();
+                    p3 = s2.getResultThinningList().get(0);
+                    if(p3.x > p2.x && p3.x > p1.x && p1.y == p2.y){
+                        return 33;
+                    }else if(p3.x < p2.x && p3.x < p1.x && p1.y == p2.y){
+                        return 105;
+                    }else if(p3.x < p2.x && p3.x < p1.x && p1.y > p2.y){
+                        return 106;
+                    }else if(p3.x > p2.x && p3.x > p1.x && p1.y < p2.y){
+                        return 63;
+                    }else if(p3.x < p2.x && p3.x < p1.x && p1.y == p2.y && left > 0){
+                        return 59;
+                    }
+                }
+            }
             return -1;
         }else if (this.objectsSkeletons.size() == 3){
-            System.out.println("3 objek");            
+            System.out.println("3 objek");
+            Skeleton s1 = null;
+            Skeleton s2 = null;
+            Skeleton s3 = null;
+            int l1 = this.objectsSkeletons.get(0).getResultThinningList().size();          
+            int l2 = this.objectsSkeletons.get(1).getResultThinningList().size();
+            int l3 = this.objectsSkeletons.get(2).getResultThinningList().size();          
+            if(l1 >= l2 && l1>= l3){
+                s1 = this.objectsSkeletons.get(0);
+                if(l2 >= l3){
+                    s2 = this.objectsSkeletons.get(1);
+                    s3 = this.objectsSkeletons.get(2);
+                }else{
+                    s2 = this.objectsSkeletons.get(2);
+                    s3 = this.objectsSkeletons.get(1);
+                }
+            }else if(l2 >= l1 && l2 >= l3){
+                s1 = this.objectsSkeletons.get(1);
+                if(l1 >= l3){
+                    s2 = this.objectsSkeletons.get(0);
+                    s3 = this.objectsSkeletons.get(2);
+                }else{
+                    s2 = this.objectsSkeletons.get(2);
+                    s3 = this.objectsSkeletons.get(0);
+                }
+            }else if(l3 >= l1 && l3 >= l2){
+                s1 = this.objectsSkeletons.get(2);
+                if(l1 >= l2){
+                    s2 = this.objectsSkeletons.get(0);
+                    s3 = this.objectsSkeletons.get(1);
+                }else{
+                    s2 = this.objectsSkeletons.get(1);
+                    s3 = this.objectsSkeletons.get(0);
+                }
+            }
+            if(s1.getEndPoint().size() == 2 && s2.getCircle() == 1 && s3.getCircle() == 1){
+                return 37;
+            }
             return -1;
         }else return -1;
     }
@@ -736,7 +640,9 @@ class Collection{
     }
 
     public static void main(String[] args){
-        int caseAscii = 38;
+        Scanner sc = new Scanner(System.in);
+        int caseAscii = sc.nextInt();
+
         for(int i = caseAscii;i<caseAscii+1;i++){
             String file = i + ".png";
             String file2 = i + "Thinning.png";
