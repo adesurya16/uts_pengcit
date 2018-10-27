@@ -203,7 +203,7 @@ class Skeleton{
                 this.matrixBlackWhite[i][j] = 0;
             }
         }
-        
+        getBoundPoints();
        initMatrixFromList();
     }
 
@@ -429,7 +429,7 @@ class Skeleton{
     public void getBoundPoints(){
         // ArrayList<Point> pList = getEndPoint();
         int i = 0;
-        int xmax = 0,xmin = 0,ymax = 0,ymin = 0;
+        int xmax = 0, xmin = 0,ymax = 0,ymin = 0;
         for (Point p: this.resultThinningList){
             i++;
             if (i == 1){
@@ -467,13 +467,13 @@ class Skeleton{
         int w = p.y;
         // 1 .. 4
         int area = 0;
-        if ((h > this.pointMin.x) && (h < ((this.pointMax.x + this.pointMin.x) / 2)) && (w > this.pointMin.y) && (w < (this.pointMax.y + this.pointMin.y) / 2)){
+        if ((h > this.pointMin.x) && (h <= ((this.pointMax.x + this.pointMin.x) / 2)) && (w > this.pointMin.y) && (w < (this.pointMax.y + this.pointMin.y) / 2)){
             area = 1;
-        }else if(h > this.pointMin.x && h < ((this.pointMax.x + this.pointMin.x) / 2) && w > ((this.pointMax.y + this.pointMin.y) / 2) && w < this.pointMax.y){
+        }else if(h > this.pointMin.x && h < ((this.pointMax.x + this.pointMin.x) / 2) && w >= ((this.pointMax.y + this.pointMin.y) / 2) && w < this.pointMax.y){
             area = 2;
-        }else if(h > ((this.pointMax.x + this.pointMin.x) / 2) && h < this.pointMax.x && w > ((this.pointMax.y + this.pointMin.y) / 2) && w < this.pointMax.y){
+        }else if(h >= ((this.pointMax.x + this.pointMin.x) / 2) && h < this.pointMax.x && w > ((this.pointMax.y + this.pointMin.y) / 2) && w < this.pointMax.y){
             area = 3;
-        }else if(h > ((this.pointMax.x + this.pointMin.x) / 2) && h < this.pointMax.x && w > this.pointMin.y && (w < (this.pointMax.y + this.pointMin.y) / 2)){
+        }else if(h > ((this.pointMax.x + this.pointMin.x) / 2) && h < this.pointMax.x && w > this.pointMin.y && (w <= (this.pointMax.y + this.pointMin.y) / 2)){
             area = 4;
         }
         // else origin
@@ -576,13 +576,15 @@ class Skeleton{
     public void postProcessingThreshold(int tholdPrecentage){
         // thold percentage from longer width or height
         System.out.println("Post Processing using threshold process (Only 1 shape skeleton)");   
-        getBoundPoints();
+        // getBoundPoints();
         // int sizeFromBounded = (this.pointMax.x - this.pointMin.x) * (this.pointMax.x - this.pointMin.x) + (this.pointMax.y - this.pointMin.y) * (this.pointMax.y - this.pointMin.y);
         // double sizeFromBounded2 = Math.sqrt((double) sizeFromBounded);
         int size = this.resultThinningList.size();
-        System.out.println("size : " + size);
+        System.out.println("size before post processing : " + size);
         int tholdSize = (int) size * tholdPrecentage / 100;
         System.out.println("thold size : " + tholdSize);
+
+        printBoundedPoint();
         // if (this.height > this.width){
         //     tholdSize = (int)this.height*thold / (int) 100;
         // }else{
@@ -610,13 +612,19 @@ class Skeleton{
                     }
                 }
             }
-            deletePointFromList(delPoint);
-            deletePointFromList(getDeleteSisaPoint(pList, this.resultThinningList));
-            deletePointFromList(getDeleteEndPointPattern(this.resultThinningList));
-            setThinningList();
-            getBoundPoints();
+            if (delPoint.size() > 0){
+                deletePointFromList(delPoint);
+                deletePointFromList(getDeleteSisaPoint(pList, this.resultThinningList));
+                deletePointFromList(getDeleteEndPointPattern(this.resultThinningList));
+                setThinningList();
+                getBoundPoints();
+                printBoundedPoint();
+            }
             System.out.println();
-        }   
+        }
+        size = this.resultThinningList.size();
+        System.out.println("size after post processing : " + size);  
+        System.out.println();
     }
 
     public ArrayList<Point> getDeleteEndPointPattern(ArrayList<Point> pListThinning){
@@ -880,32 +888,44 @@ class Skeleton{
         return pList;
     }
 
+    public void printBoundedPoint(){
+        System.out.println();
+        System.out.println("Bounded Point");
+        System.out.println("max : " + this.pointMax.x + ", " + this.pointMax.y);
+        System.out.println("min : " + this.pointMin.x + ", " + this.pointMin.y);
+        System.out.println();
+    }
+
     public int getCircle(){
         // System.out.println("Circle Process");
         ArrayList<Point> pListResultSaved = new ArrayList<>();
         ArrayList<Point> pListEndPoint = getEndPoint();
         ArrayList<Point> delPoint = new ArrayList<>();
         
-        pListResultSaved.addAll(pListEndPoint);
+        pListResultSaved.addAll(this.resultThinningList);
 
-        for (Point p : pListEndPoint){
-            delPoint.addAll(getListDeleteFromEndPoint(p.x, p.y));
-        }
-        
-        
-        if (delPoint.size() > 0){
-            deletePointFromList(delPoint);
-            deletePointFromList(getDeleteSisaPoint(pListEndPoint, this.resultThinningList));
-            deletePointFromList(getDeleteEndPointPattern(this.resultThinningList));
-            setThinningList();
-            getBoundPoints();
+        while(pListEndPoint.size() > 0){
+            for (Point p : pListEndPoint){
+                delPoint.addAll(getListDeleteFromEndPoint(p.x, p.y));
+            }
+            if (delPoint.size() > 0){
+                deletePointFromList(delPoint);
+                deletePointFromList(getDeleteSisaPoint(pListEndPoint, this.resultThinningList));
+                deletePointFromList(getDeleteEndPointPattern(this.resultThinningList));
+                setThinningList();
+                getBoundPoints();
+            }
+            pListEndPoint = getEndPoint();
+            delPoint.clear();
         }
         
         if (this.resultThinningList.size() == 0){
+            initMatrixFromList(pListResultSaved);
+            setThinningList();
+            getBoundPoints();
             return 0;
         }
 
-        pListEndPoint = getEndPoint();
         // System.out.println("End Point sementara : " + pListEndPoint.size());
         // int hole = 0;
         ArrayList<Point> pListIntersect = getIntersectPoint();
@@ -913,28 +933,41 @@ class Skeleton{
         
         int count = 1;
         for(Point p : pListIntersect){
+            // System.out.println("intersect process");
             if (isValidIntersectPoint(p.x, p.y)){
                 delPoint = getListDeleteFromIntersectPoint(p.x, p.y);
                 // System.out.println("Deleted sebanyak : " + delPoint.size()); 
                 deletePointFromList(delPoint);
                 deletePointFromList(getDeleteSisaPoint(pListEndPoint, this.resultThinningList));
                 deletePointFromList(getDeleteEndPointPattern(this.resultThinningList));
+                setThinningList();
+                getBoundPoints();
                 delPoint.clear();
                 pListEndPoint = getEndPoint();
-                for (Point pp : pListEndPoint){
-                    delPoint.addAll(getListDeleteFromEndPoint(pp.x, pp.y));
-                }
                 
                 
-                if (delPoint.size() > 0){
-                    deletePointFromList(delPoint);
-                    deletePointFromList(getDeleteSisaPoint(pListEndPoint, this.resultThinningList));
-                    deletePointFromList(getDeleteEndPointPattern(this.resultThinningList));
-                    setThinningList();
-                    getBoundPoints();
+                
+                // if (delPoint.size() > 0){
+                // System.out.println("end point setelah deleted circle : " + pListEndPoint.size());
+                while(pListEndPoint.size() > 0){
+                    for (Point pp : pListEndPoint){
+                        delPoint.addAll(getListDeleteFromEndPoint(pp.x, pp.y));
+                    }
+                    if (delPoint.size() > 0){
+                        deletePointFromList(delPoint);
+                        deletePointFromList(getDeleteSisaPoint(pListEndPoint, this.resultThinningList));
+                        deletePointFromList(getDeleteEndPointPattern(this.resultThinningList));
+                        setThinningList();
+                        getBoundPoints();
+                    }
+                    pListEndPoint = getEndPoint();
+                    // System.out.println("end point setelah deleted circle : " + pListEndPoint.size());
+
+                    delPoint.clear();
                 }
+                // }
                 // cek
-                toFileAfterThinning("processCircle" + count);
+                // toFileAfterThinning("processCircle" + count);
                 count++;
             }
         }

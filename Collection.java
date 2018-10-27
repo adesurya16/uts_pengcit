@@ -21,7 +21,7 @@ class Collection{
     private int height;
     private ArrayList<Point> resultThinningList;
 
-    private final int THRESHOLD_COMMON = 5;
+    private int THRESHOLD_COMMON = 5;
     // private ArrayList<Integer> chainCode;
     private Point pointMax;
     private Point pointMin;
@@ -81,6 +81,10 @@ class Collection{
     
     public int getHeight(){
         return this.height;
+    }
+
+    public void setThreshold(int threshold){
+        this.THRESHOLD_COMMON = threshold;
     }
 
     public void toZeroMatrix(){
@@ -353,6 +357,7 @@ class Collection{
     }
 
     
+
     public void printAllDistanceEndPointSkeletons(){
         for(Skeleton s:this.objectsSkeletons){
             s.printAllDistanceEndPoint();
@@ -367,14 +372,34 @@ class Collection{
         }
     }
 
+    public void printBoundedPoint(){
+        System.out.println();
+        System.out.println("Bounded Point");
+        System.out.println("max : " + this.pointMax.x + ", " + this.pointMax.y);
+        System.out.println("min : " + this.pointMin.x + ", " + this.pointMin.y);
+        System.out.println();        
+    }
+
+    public double getGradien(Point p1,Point p2){
+        if (p2.x == p1.x){
+            return -999999; //infinity
+        }
+        return (double)(p2.y - p1.y) / (double)(p2.x - p1.x); 
+    }
+
     public int recognizeCharacterAscii(){
         
         // feature direction, kuadran, gradien, isOriginOffset tertentu, intersect point, endpoint. circle
         if (this.objectsSkeletons.size() == 1){
             System.out.println("1 objek");
             Skeleton s = this.objectsSkeletons.get(0);
+            if(s.getResultThinningList().size() == 1){
+                return 46;
+            }
             ArrayList<Point> pListEndPoint = s.getEndPoint();
             ArrayList<Point> pListInterPoints = s.getIntersectPoint();
+            ArrayList<Point> pListIntersect= s.getIntersectPoint();                
+            System.out.println("intersect : " + pListIntersect.size());
             int down = s.getValleyFromDown();
             int up = s.getValleyFromUp();
             int left = s.getValleyFromLeft();
@@ -388,20 +413,20 @@ class Collection{
 
             // sementara 0 - 9 (ascii 48 - 57)
             int c = s.getCircle();
+            // int c = 0;
             System.out.println("Circle : " + c);
             if (pListEndPoint.size() == 0){
-                
                 if(c == 1){
-                    if ( (this.pointMax.x - this.pointMin.x) - (this.pointMax.y - this.pointMin.y) < 3){
+                    if ( Math.abs((this.pointMax.x - this.pointMin.x) - (this.pointMax.y - this.pointMin.y)) < 30){
                         return 79;
+                    // compare lagi sama D
                     }else return 48;
                 }else if (pListInterPoints.size() == 2 && c == 2){
+                    // compare lagi sama B
                     return 56;
                 }
             }else if(pListEndPoint.size() == 1){
-                if(this.resultThinningList.size() == 1){
-                    return 46;
-                }
+                
                 int q = s.getAreaQuadran(pListEndPoint.get(0));
                 // System.out.println("q : " + q);
                 if (q == 2 && c == 1){
@@ -409,12 +434,14 @@ class Collection{
                 }else if(q == 4 && c == 1){
                     return 57;
                 }
-                ArrayList<Point> pListIntersect= s.getIntersectPoint();
+                // ArrayList<Point> pListIntersect= s.getIntersectPoint();
                 if(q == 3 && c == 1 && pListIntersect.size() == 1 && pListIntersect.get(0).y == pListEndPoint.get(0).y){
                     return 52;
                 }else if(q == 3 && c == 1 && pListIntersect.size() == 1 && s.getDistanceFromPattern(pListEndPoint.get(0).x, pListEndPoint.get(0).y) > s.getResultThinningList().size() / 2){
+                    System.out.println(s.getDistanceFromPattern(pListEndPoint.get(0).x, pListEndPoint.get(0).y));
                     return 64;
-                }else if(q == 3 && c == 1 && pListIntersect.size() == 1 && s.getDistanceFromPattern(pListEndPoint.get(0).x, pListEndPoint.get(0).y) > s.getResultThinningList().size() / 4){
+                }else if(q == 3 && c == 1 && s.getDistanceFromPattern(pListEndPoint.get(0).x, pListEndPoint.get(0).y) < s.getResultThinningList().size() / 4){
+                    System.out.println(s.getDistanceFromPattern(pListEndPoint.get(0).x, pListEndPoint.get(0).y));
                     return 81;
                 }
             }else if(pListEndPoint.size() == 2){
@@ -430,17 +457,27 @@ class Collection{
                 
                 int q1 = s.getAreaQuadran(p1);
                 int q2 = s.getAreaQuadran(p2);
-                // System.out.println("q1 : " + q1 + " , " + "q2 : " + q2);
+                s.printBoundedPoint();
+                System.out.println("(x1, y1) : (" + p1.x + " ," + p1.y + ")");
+                System.out.println("(x2, y2) : (" + p2.x + " ," + p2.y + ")");
+                System.out.println("q1 : " + q1 + " , " + "q2 : " + q2);
+                double g = getGradien(p1, p2);
+                System.out.println("gradien : " + g);
                 // System.out.println("dir1 : " + getDirection(p1) + " , " + "dir2 : " + getDirection(p2));
-                if(p1.y == p2.y && p2.x < this.height/2){
+                if(p1.y == p2.y && p2.x < this.height / 2){
                     return 39;
-                }else if(p1.x > this.height/2 && p2.x < this.height/2 && left == 0 && right == 0 && p1.y == p2.y){
+                }else if(c == 1 && (q1 == 4 || q1 == 3) && q2 == 3 && g > 0 && s.getDistanceFromPattern(p2.x, p2.y) < s.getResultThinningList().size() / 4){
+                    return 81;
+                }else if(c == 0 && q2 == 3 && c == 1 && q1 == 2 && pListIntersect.size() == 2){
+                    // System.out.println(s.getDistanceFromPattern(pListEndPoint.get(0).x, pListEndPoint.get(0).y));
+                    return 64;
+                }else if(p1.x < this.height/2 && p2.x > this.height/2 && left == 0 && right == 0 && p1.y == p2.y){
                     return 73;
-                }else if(p1.x > this.height/2 && p2.x < this.height/2 && left == 1){
+                }else if(c == 0 && p1.x < this.height/2 && p2.x > this.height/2 && (left == 1 || right == 1) && q1 == 1 && q2 == 4){
                     return 44;
                 }else if(p1.x == p2.x && up == 0 && down == 0){
                     return 45;
-                }else if(p1.y > this.width/2 && p2.y < this.width/2 && up == 1 && down == 1){
+                }else if(p1.y > this.width/2 && p2.y < this.width/2 && (up == 1 || down == 1 ) && Math.abs(Math.abs(p1.x - p2.x) - (this.pointMax.x - this.pointMin.x)) < 10 ){
                     return 126;
                 }else if(p2.x > this.height/2 && q1 == 1 && q2 == 3 && left == 0 && right == 0){
                     return 96;
@@ -448,12 +485,36 @@ class Collection{
                     return 36;
                 }else if (c == 2 && q1 == q2 && q1 == 3){
                     return 38;
-                }else if(q1 == 3 && q2 == 3){
-                    return 52;
-                }else if(q1 == 1 && q2 == 3){
+                }else if(q1 == 3 && q2 == 3 && g < 0 && pListIntersect.size() == 1){
+                    if(Math.abs(p1.x - pListIntersect.get(0).x) < 10 && Math.abs(p2.y - pListIntersect.get(0).y) < 10){
+                        return 52;
+                    }
+                }else if(q1 == 1 && q2 == 3 && left == 1){
                     return 50;
-                }else if( ((q1 == 1 && q2 == 2) || (q2 == 1 && q1 == 2)) && up == 1){
+                }else if( ((q1 == 1 && q2 == 2) || (q2 == 1 && q1 == 2)) && (up == 1 || down == 1 )){
                     return 85;
+                }else if(c == 1 && Math.abs(p1.y - p2.y) < 10 && pListIntersect.size() == 2){
+                    Point pSect1 = new Point();
+                    Point pSect2 = new Point();
+                    if(pListIntersect.get(0).x <  pListIntersect.get(1).x){
+                        pSect1 = pListIntersect.get(0);
+                        pSect2 = pListIntersect.get(1);
+                    }else{
+                        pSect2 = pListIntersect.get(0);
+                        pSect1 = pListIntersect.get(1);                
+                    }
+                    int len = pSect2.x - pSect1.x;
+                    // System.out.println("len : " + len);
+                    // System.out.println("max : " + (this.pointMax.x - this.pointMin.x));
+                    if (q1 == 1 && q2 == 4 && s.getAreaQuadran(pSect2) == 4 && len < (this.pointMax.x - this.pointMin.x) / 2 && s.getDistanceFromPattern(p1.x, p1.y) > s.getDistanceFromPattern(p2.x, p2.y)){
+                        return 98;
+                    }else if(q1 == 2 && q2 == 3 && s.getAreaQuadran(pSect2) == 3 && len < (this.pointMax.x - this.pointMin.x) / 2 && s.getDistanceFromPattern(p1.x, p1.y) > s.getDistanceFromPattern(p2.x, p2.y)){
+                        return 100;
+                    }else if(q1 == 1 && q2 == 4 && s.getAreaQuadran(pSect1) == 1 && len < (this.pointMax.x - this.pointMin.x) / 2 && s.getDistanceFromPattern(p1.x, p1.y) < s.getDistanceFromPattern(p2.x, p2.y)){
+                        return 112;
+                    }else if(q1 == 2 && q2 == 3 && s.getAreaQuadran(pSect1) == 2 && len < (this.pointMax.x - this.pointMin.x) / 2 && s.getDistanceFromPattern(p1.x, p1.y) < s.getDistanceFromPattern(p2.x, p2.y)){
+                        return 113;
+                    }
                 }
 
                 // if (q1 == 1 && q2 == 4  && s.getDirection(p1) == 3 && (s.getDirection(p2) == 2 || s.getDirection(p2) == 1)){
@@ -470,10 +531,10 @@ class Collection{
                 //     return 3;
                 // }
             }else{
-                ArrayList<Point> pListIntersect = s.getIntersectPoint();
-                if(c == 1 && pListEndPoint.size() == 8 && pListIntersect.size() == 4){
+                // ArrayList<Point> pListIntersect = s.getIntersectPoint();
+                if(c == 1 && pListEndPoint.size() == 8 && pListIntersect.size() == 8){
                     return 35;
-                }else if(c == 2 && pListEndPoint.size() == 4 && pListIntersect.size() == 3){
+                }else if(c == 2 && pListEndPoint.size() == 4 && pListIntersect.size() == 4){
                     return 36;
                 }else if(c == 0 && pListEndPoint.size() == 5){
                     return 42;
@@ -642,7 +703,7 @@ class Collection{
     public static void main(String[] args){
         Scanner sc = new Scanner(System.in);
         int caseAscii = sc.nextInt();
-
+        int ths = sc.nextInt();
         for(int i = caseAscii;i<caseAscii+1;i++){
             String file = i + ".png";
             String file2 = i + "Thinning.png";
@@ -658,9 +719,13 @@ class Collection{
                     writer.close();
                 }
                 Collection cs = new Collection(Collection.pix01, img.getWidth(), img.getHeight());
+                cs.setThreshold(ths);
                 cs.thinImage();
                 cs.setThinningList();
-                cs.getBoundPoints();    
+                cs.getBoundPoints(); 
+
+                cs.printBoundedPoint();   
+                
                 cs.getSkeletons();
                 cs.postProcessingThresholdAll();
                 
@@ -671,6 +736,9 @@ class Collection{
                 // cs.printAllIntersectPointSkeletons();
                 
                 cs.getUpdateMatrix();
+                cs.setThinningList();
+                cs.getBoundPoints();
+
                 cs.toFileAfterThinning(out2);
                 cs.toImageAfterThinning(file2);
                 
