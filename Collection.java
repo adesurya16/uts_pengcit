@@ -356,7 +356,22 @@ class Collection{
         
     }
 
-    
+    public void printListOfPoint(ArrayList<Integer> pList){
+        for (Integer p: pList){
+            System.out.print(p);
+        }
+        System.out.println();
+    }
+
+    public String toStringFromArrayListInt(ArrayList<Integer> pList){
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0;i<pList.size();i++){
+            int num = pList.get(i);
+            sb.append(num);
+        }
+        String res = sb.toString();
+        return res;
+    }
 
     public void printAllDistanceEndPointSkeletons(){
         for(Skeleton s:this.objectsSkeletons){
@@ -385,6 +400,43 @@ class Collection{
             return -999999; //infinity
         }
         return (double)(p2.y - p1.y) / (double)(p2.x - p1.x); 
+    }
+
+    private int editDistDP(String str1, String str2, int m, int n)
+    {
+        int dp[][] = new int[m+1][n+1];
+
+        for (int i=0; i<=m; i++)
+        {
+            for (int j=0; j<=n; j++)
+            {
+                if (i == 0)
+                    dp[i][j] = j;
+                else if (j == 0)
+                    dp[i][j] = i;
+                else if (str1.charAt(i-1) == str2.charAt(j-1))
+                    dp[i][j] = dp[i-1][j-1];
+                else
+                    dp[i][j] = 1 + min(dp[i][j-1],  // Insert
+                                        dp[i-1][j],  // Remove
+                                        dp[i-1][j-1]); // Replace
+            }
+        }
+        return dp[m][n];
+    }
+    
+    public int min(int a, int b, int c){
+        if(a > b){
+            int tmp = a;
+            a = b;
+            b = tmp;
+        }
+        if(b > c){
+            int tmp = b;
+            b = c;
+            c = tmp;
+        }
+        return c;
     }
 
     public int recognizeCharacterAscii(){
@@ -420,10 +472,28 @@ class Collection{
                     if ( Math.abs((this.pointMax.x - this.pointMin.x) - (this.pointMax.y - this.pointMin.y)) < 30){
                         return 79;
                     // compare lagi sama D
-                    }else return 48;
+                    }else{
+                        String s1 = toStringFromArrayListInt(s.getChainCode(s.getResultThinningList().get(0)));
+                        System.out.println(s1);
+                        String s0 = Template.ascii48;
+                        String sD = Template.ascii68;
+                        int d1 = editDistDP(s1, s0, s1.length(), s0.length());
+                        int d2 = editDistDP(s1, sD, s1.length(), sD.length());
+                        if (d1 < d2){
+                            return 48;
+                        }else return 68;
+                    } 
                 }else if (pListInterPoints.size() == 2 && c == 2){
                     // compare lagi sama B
-                    return 56;
+                    String s1 = toStringFromArrayListInt(s.getChainCode(s.getResultThinningList().get(0)));
+                    System.out.println(s1);
+                    String s8 = Template.ascii56;
+                    String sB = Template.ascii66;
+                    int d1 = editDistDP(s1, s8, s1.length(), s8.length());
+                    int d2 = editDistDP(s1, sB, s1.length(), sB.length());
+                    if (d1 < d2){
+                        return 56;
+                    }else return 66;
                 }
             }else if(pListEndPoint.size() == 1){
                 
@@ -455,6 +525,11 @@ class Collection{
                     p1 = pListEndPoint.get(1);                
                 }
                 
+                // System.out.println("Chaincode");
+                // printListOfPoint(s.getChainCode(p1));
+                // System.out.println(toStringFromArrayListInt(s.getChainCode(p1)));  
+                // System.out.println();
+
                 int q1 = s.getAreaQuadran(p1);
                 int q2 = s.getAreaQuadran(p2);
                 s.printBoundedPoint();
@@ -490,7 +565,14 @@ class Collection{
                         return 52;
                     }
                 }else if(q1 == 1 && q2 == 3 && left == 1){
-                    return 50;
+                    String s1 = toStringFromArrayListInt(s.getChainCode(p1));
+                    String s2 = Template.ascii50;
+                    String sZ = Template.ascii90;
+                    int d1 = editDistDP(s1, s2, s1.length(), s2.length());
+                    int d2 = editDistDP(s1, sZ, s1.length(), sZ.length());
+                    if (d1 < d2){
+                        return 50;
+                    }else return 90; 
                 }else if( ((q1 == 1 && q2 == 2) || (q2 == 1 && q1 == 2)) && (up == 1 || down == 1 )){
                     return 85;
                 }else if(c == 1 && Math.abs(p1.y - p2.y) < 10 && pListIntersect.size() == 2){
@@ -515,6 +597,17 @@ class Collection{
                     }else if(q1 == 2 && q2 == 3 && s.getAreaQuadran(pSect1) == 2 && len < (this.pointMax.x - this.pointMin.x) / 2 && s.getDistanceFromPattern(p1.x, p1.y) < s.getDistanceFromPattern(p2.x, p2.y)){
                         return 113;
                     }
+                }else if(c == 0 && q1 == 2 && q2 == 4 && left > 0 || right > 0){
+                    // 5 atau S
+                    String s1 = toStringFromArrayListInt(s.getChainCode(p1));
+                    String s5 = Template.ascii53;
+                    String sS = Template.ascii83;
+                    int d1 = editDistDP(s1, s5, s1.length(), s5.length());
+                    int d2 = editDistDP(s1, sS, s1.length(), sS.length());
+                    if (d1 < d2){
+                        return 53;
+                    }else return 83; 
+                    // System.out.println("masuk 5 atau S");
                 }
 
                 // if (q1 == 1 && q2 == 4  && s.getDirection(p1) == 3 && (s.getDirection(p2) == 2 || s.getDirection(p2) == 1)){
@@ -542,10 +635,10 @@ class Collection{
             }
             return -1;
         }else if (this.objectsSkeletons.size() == 2){
-            // System.out.println("2 objek");
+            System.out.println("2 objek");
             System.out.println(this.objectsSkeletons.get(0).getResultThinningList().size());
             System.out.println(this.objectsSkeletons.get(1).getResultThinningList().size());
-            if(this.objectsSkeletons.get(0).getResultThinningList().size() - this.objectsSkeletons.get(1).getResultThinningList().size() < 5){
+            if(Math.abs(objectsSkeletons.get(0).getResultThinningList().size() - this.objectsSkeletons.get(1).getResultThinningList().size()) < 5){
                 // System.out.println("2 objek sama");
                 if(this.objectsSkeletons.get(0).getResultThinningList().size() < 3 && this.objectsSkeletons.get(1).getResultThinningList().size() < 3){
                     return 58;
@@ -553,21 +646,35 @@ class Collection{
                 this.objectsSkeletons.get(1).getResultThinningList().get(this.objectsSkeletons.get(1).getResultThinningList().size() - 1).x < this.height/2
                 ){
                     return 34;
+                }else if(this.objectsSkeletons.get(0).getResultThinningList().size() > 3 && this.objectsSkeletons.get(1).getResultThinningList().size() > 3){
+                    Skeleton s1 = this.objectsSkeletons.get(0);
+                    Skeleton s2 = this.objectsSkeletons.get(1);
+                    ArrayList<Point> pList1 = s1.getEndPoint(); 
+                    ArrayList<Point> pList2 = s2.getEndPoint(); 
+                    if(pList1.size() == 2 && pList2.size() == 2 && Math.abs(this.objectsSkeletons.get(0).getResultThinningList().size() - this.objectsSkeletons.get(1).getResultThinningList().size()) < 5){
+                        if(Math.abs(pList1.get(0).x - pList1.get(1).x) < 3 && Math.abs(pList2.get(0).x - pList2.get(1).x) < 3){
+                            return 61;
+                        }
+                    }
                 }
                 
             }else{
+                // System.out.println("masuk");
+
                 Skeleton s1 = null;
                 Skeleton s2 = null;
-                if(this.objectsSkeletons.get(0).getResultThinningList().size() > this.objectsSkeletons.get(0).getResultThinningList().size()){
+                if(this.objectsSkeletons.get(0).getResultThinningList().size() > this.objectsSkeletons.get(1).getResultThinningList().size()){
                     s1 = this.objectsSkeletons.get(0);
                     s2 = this.objectsSkeletons.get(1);
                 }else{
                     s2 = this.objectsSkeletons.get(0);
                     s1 = this.objectsSkeletons.get(1);
                 }
-                if(s1.getEndPoint().size() == 2 && s2.getResultThinningList().size() == 1){
+                // System.out.println("size : " + s1.getEndPoint().size());
+                if(s1.getEndPoint().size() == 2 && s2.getResultThinningList().size() < 6){
                     Point p1 = new Point();
                     Point p2 = new Point();
+                    // System.out.println("masuk");
                     
                     if(s1.getEndPoint().get(0).x < s1.getEndPoint().get(1).x){
                         p1 = s1.getEndPoint().get(0);
@@ -576,19 +683,29 @@ class Collection{
                         p1 = s1.getEndPoint().get(1);
                         p2 = s1.getEndPoint().get(0);
                     }
+                    
                     int left = s1.getValleyFromLeft();
+                    int right = s1.getValleyFromRight();
                     Point p3 = new Point();
+                    
                     p3 = s2.getResultThinningList().get(0);
+
+                    System.out.println("p1 : " + p1.x + "," + p1.y);
+                    System.out.println("p2 : " + p2.x + "," + p2.y);
+                    System.out.println("p3 : " + p3.x + "," + p3.y);
+                    System.out.println("left : " + left);
+                    System.out.println("right : " + right);
+                    
                     if(p3.x > p2.x && p3.x > p1.x && p1.y == p2.y){
                         return 33;
+                    }else if(p3.x < p2.x && p3.x < p1.x && (left > 0 || right > 0)){
+                        return 59;
                     }else if(p3.x < p2.x && p3.x < p1.x && p1.y == p2.y){
                         return 105;
                     }else if(p3.x < p2.x && p3.x < p1.x && p1.y > p2.y){
                         return 106;
                     }else if(p3.x > p2.x && p3.x > p1.x && p1.y < p2.y){
                         return 63;
-                    }else if(p3.x < p2.x && p3.x < p1.x && p1.y == p2.y && left > 0){
-                        return 59;
                     }
                 }
             }
@@ -638,11 +755,11 @@ class Collection{
 
     public void toImageAfterThinning(String file){
         try{
-            BufferedImage img = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_RGB);
+            BufferedImage img = new BufferedImage(this.height, this.width, BufferedImage.TYPE_INT_RGB);
             File f = new File(file);
             int px;
-            for(int i=0;i<this.height;i++){
-                for(int j=0;j<this.width;j++){
+            for(int i=0;i<this.width;i++){
+                for(int j=0;j<this.height;j++){
                     // R G B
                     if(this.matrixBlackWhite[i][j] == 1){ //B
                         px = 0;
