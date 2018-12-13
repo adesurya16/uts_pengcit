@@ -30,7 +30,7 @@ public class ObjSkin {
     private ArrayList<Component> componentList;
 
     public ObjSkin(ArrayList<point> pList, int height, int width){
-        System.out.println("obj ctor");
+        // System.out.println("obj ctor");
         this.pAreaSkinList = new ArrayList<>();
         this.componentList = new ArrayList<>();
         this.matrixBW = new int[height][];
@@ -46,6 +46,7 @@ public class ObjSkin {
 
         getBoundedPoint();
         detectHoleToList();
+        findEyes();
     }
 
     public ArrayList<Integer> getChainCodeList(){
@@ -75,7 +76,7 @@ public class ObjSkin {
     }
 
     public void initMatrixFromList(ArrayList<point> pList){
-        System.out.println("init matrix");
+        // System.out.println("init matrix");
         for(int i=0;i<this.height;i++){
             for(int j=0;j<this.width;j++){
                 this.matrixBW[i][j] = blackVal;
@@ -151,15 +152,15 @@ public class ObjSkin {
                 int x = i;
                 int y = j;
                 if (this.matrixBW[x][y] == blackVal){
-                    System.out.println("current hole");
+                    // System.out.println("current hole");
                     isHole = true;
                     pList = new ArrayList<>();
                     getDeletedPointSkinComponent(x, y);
                     if (isHole) {
                         this.componentList.add(new Component(pList, this.height, this.width));
-                        System.out.println("NEW component");
+                        // System.out.println("NEW component");
                     }else {
-                        System.out.println("NOT component");
+                        // System.out.println("NOT component");
                     }
                 }
             }
@@ -187,6 +188,60 @@ public class ObjSkin {
                 }
             }
         
+    }
+
+    public void findEyes(){
+        // System.out.println("eye detection");
+        System.out.println(this.Xmax + ", " + this.Xmin);
+        System.out.println(this.Ymax + ", " + this.Ymin);
+
+        ArrayList<Component> pList2 = new ArrayList<>();
+        int batas = this.Ymin + ((this.Ymax - this.Ymin) / 3);
+        for(Component p : this.componentList){
+            if (p.Ymax < batas){
+                pList2.add(p);
+            }
+        }
+        System.out.println(pList2.size());
+
+        ArrayList<Component> pList2Sorted = new ArrayList<>();
+        while (pList2.size() > 0){
+            int jmax = -1;
+            Component pMax = null;
+            int j = 0;
+            for(Component p : pList2){
+                if (jmax == -1){
+                    pMax = p;
+                    jmax = j;
+                }else if(p.Ymax > pMax.Ymax){
+                    pMax = p;
+                    jmax = j;
+                }
+                j++;
+            }
+            pList2.remove(jmax);
+            pList2Sorted.add(pMax);    
+        }
+        System.out.println(pList2Sorted.size());
+
+        for(int i=0;i<pList2Sorted.size() ;i++){
+            // pList2Sorted.get(i).isEye = true;
+            // int idx1 = this.componentList.indexOf(pList2Sorted.get(i));
+            // this.componentList.get(idx1).isEye = true;
+
+            // bisa tambahin chain code
+            if( Math.abs((double)pList2Sorted.get(i).Ymax - (double)pList2Sorted.get(i + 1).Ymax) < 10){
+                pList2Sorted.get(i).isEye = true;
+                int idx1 = this.componentList.indexOf(pList2Sorted.get(i));
+                this.componentList.get(idx1).isEye = true;
+                // System.out.println(this.componentList.indexOf(pList2Sorted.get(i)));
+                pList2Sorted.get(i + 1).isEye = true;
+                int idx2 = this.componentList.indexOf(pList2Sorted.get(i + 1));
+                this.componentList.get(idx2).isEye = true;
+                // System.out.println(this.componentList.indexOf(pList2Sorted.get(i + 1)));
+                break;
+            }
+        }
     }
 
     public boolean IsFaceDetected(){

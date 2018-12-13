@@ -80,6 +80,14 @@ public class MainOperator{
         // imageSkinRgbOperation();
     }
 
+    public void setMatrixRGB(int matrix[][]){
+        for(int i = 0; i < height;i++){
+            for(int j = 0; j < width;j++){
+                this.pixel[i][j] = matrix[i][j];
+            }
+        }
+    }
+
     public void setMatrixBW(int matrix[][]){
         for(int i = 0; i < height;i++){
             for(int j = 0; j < width;j++){
@@ -87,6 +95,8 @@ public class MainOperator{
             }
         }
     }
+
+
 
     private void imageSkinRgbOperation(){
         // BitmapDrawable bd = (BitmapDrawable) photoView.getDrawable();
@@ -129,7 +139,7 @@ public class MainOperator{
         
         int width = img.getHeight();
         int height = img.getWidth();
-        System.out.println("masuk");
+        // System.out.println("masuk");
         pix = new Color[height][];
         for(int i = 0;i < height;i++){
             
@@ -168,6 +178,37 @@ public class MainOperator{
         //     e.printStackTrace();
         // }
         
+    }
+
+    public void toImageRGB(String file){
+        try{
+            BufferedImage img = new BufferedImage(this.height, this.width, BufferedImage.TYPE_INT_RGB);
+            File f = new File(file);
+            int px;
+            for(int i=0;i<this.width;i++){
+                for(int j=0;j<this.height;j++){
+                    // R G B
+                    int col = this.pixel[j][i];
+                    img.setRGB(j, i, col);
+                    // if(this.matrixBw[i][j] == whiteVal){ //B
+                    //     px = 0;
+                    //     int col = (px << 16) | (px << 8) | px;
+                    //     img.setRGB(j, i, col);
+                    // }else if(this.matrixBlackWhite[i][j] == 0){ //W
+                    //     px = 255;
+                    //     int col = (px << 16) | (px << 8) | px;
+                    //     img.setRGB(j, i, col);
+                    // }else{ //R
+                    //     int col = (255 << 16) | (0 << 8) | 0;
+                    //     img.setRGB(j, i, col);
+                    // }
+                    
+                }
+            }
+            ImageIO.write(img, "PNG", f);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
     public void toImageBw(String file){
@@ -259,7 +300,7 @@ public class MainOperator{
         String file2 = s + "out.png";
         try{    
             BufferedImage img = ImageIO.read(new File(file));
-            System.out.println("masuk");
+            // System.out.println("masuk");
         // writer = new BufferedWriter(new FileWriter(out));
             MainOperator.readImage(img);
 
@@ -268,8 +309,9 @@ public class MainOperator{
             mo.imageSkinRgbOperation();
            
             SkinningField sf = new SkinningField(mo.redPixel2, mo.greenPixel2, mo.bluePixel2, mo.matrixBw, img.getWidth(), img.getHeight());
-            mo.setMatrixBW(sf.getMarkedObjectToBW());
-            mo.toImageBw(file2);
+            // mo.setMatrixBW(sf.getMarkedObjectToBW());
+            mo.setMatrixRGB(sf.getmarkedObjectToRGBvalue());
+            mo.toImageRGB(file2);
 
         }catch(IOException e){
             e.printStackTrace();

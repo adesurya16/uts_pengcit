@@ -176,7 +176,7 @@ public class SkinningField {
 
         copyToMatrix(matBWTmp);
         // ArrayList<point> toDelete = new ArrayList<>();
-        System.out.println(height + "  " + width);
+        // System.out.println(height + "  " + width);
         
             for(int i = 0;i<this.height;i++){
                 for(int j = 0;j<this.width;j++){
@@ -187,7 +187,7 @@ public class SkinningField {
                         pList = new ArrayList<>();
                         getDeletedPointSkin(x, y);
                         if(pList.size() > threshold){
-                            System.out.println("new object");
+                            // System.out.println("new object");
 
                             ObjSkin obj = new ObjSkin(pList, this.height, this.width);
                             this.pListObjSkin.add(obj);
@@ -211,15 +211,15 @@ public class SkinningField {
 
         for(ObjSkin p: this.pListObjSkin){
             if(p.IsFaceDetected()){
-                System.out.println("marked");
-                System.out.println("(Xmax,Ymax) : (" + p.Xmax + ", " + p.Ymax + ")");                
-                System.out.println("(Xmin,Ymin) : (" + p.Xmin + ", " + p.Ymin + ")");                
+                // System.out.println("marked");
+                // System.out.println("(Xmax,Ymax) : (" + p.Xmax + ", " + p.Ymax + ")");                
+                // System.out.println("(Xmin,Ymin) : (" + p.Xmin + ", " + p.Ymin + ")");                
                 boundingObject(matBWTmp, redVal, p.Xmax, p.Xmin, p.Ymax, p.Ymin);
                 // per component
                 ArrayList<Component> pComp = p.getComponentList();
-                System.out.println("Ada Component : " + pComp.size());
+                // System.out.println("Ada Component : " + pComp.size());
                 for(Component c: pComp){
-                    boundingObject(matBWTmp, blueVal, c.Xmax, c.Xmin, c.Ymax, c.Ymin);
+                    if (c.isEye) boundingObject(matBWTmp, blueVal, c.Xmax, c.Xmin, c.Ymax, c.Ymin);
                 }
             }else{
                 boundingObject(matBWTmp, blueVal, p.Xmax, p.Xmin, p.Ymax, p.Ymin);
@@ -238,30 +238,30 @@ public class SkinningField {
         }
     }
 
-    // public int[][] getmarkedObjectToRGBvalue(){
-    //     int[][] matRGBTmp = new int[this.height][];
-    //     for(int i = 0;i < this.height;i++){
-    //         matRGBTmp[i] = new int[this.width];
-    //     }
+    public int[][] getmarkedObjectToRGBvalue(){
+        int[][] matRGBTmp = new int[this.height][];
+        for(int i = 0;i < this.height;i++){
+            matRGBTmp[i] = new int[this.width];
+        }
 
-    //     copyToMatrixRGB(matRGBTmp);
+        copyToMatrixRGB(matRGBTmp);
 
-    //     for(ObjSkin p: this.pListObjSkin){
-    //         if(p.IsFaceDetected()){
-    //             boundingObject(matRGBTmp, redVal, p.Xmax, p.Xmin, p.Ymax, p.Ymin);
-    //             // per component
-    //             ArrayList<Component> pComp = p.getComponentList();
+        for(ObjSkin p: this.pListObjSkin){
+            if(p.IsFaceDetected()){
+                boundingObject(matRGBTmp, redVal, p.Xmax, p.Xmin, p.Ymax, p.Ymin);
+                // System.out.println("(Xmax,Ymax) : (" + p.Xmax + ", " + p.Ymax + ")");                
+                // System.out.println("(Xmin,Ymin) : (" + p.Xmin + ", " + p.Ymin + ")"); 
+                // per component
+                ArrayList<Component> pComp = p.getComponentList();
                 
-    //             for(Component c: pComp){
-    //                 boundingObject(matRGBTmp, redVal, c.Xmax, c.Xmin, c.Ymax, c.Ymin);
-    //             }
-    //         }else{
-    //             System.out.println("marked");
-    //             boundingObject(matRGBTmp, blueVal, p.Xmax, p.Xmin, p.Ymax, p.Ymin);
-    //         }
-    //     }
-    //     return matRGBTmp;
-    // }
-
-
+                for(Component c: pComp){
+                    if (c.isEye) boundingObject(matRGBTmp, blueVal, c.Xmax, c.Xmin, c.Ymax, c.Ymin);
+                }
+            }else{
+                // System.out.println("marked");
+                boundingObject(matRGBTmp, blueVal, p.Xmax, p.Xmin, p.Ymax, p.Ymin);
+            }
+        }
+        return matRGBTmp;
+    }
 }

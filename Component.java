@@ -21,6 +21,10 @@ public class Component {
     private int[][] matrixBW;
     private ArrayList<Integer> chainCodeList;
 
+    public boolean isEye;
+    public boolean isMouth;
+    public boolean isNose;
+
     // component merupakan hole dari skin tapi direpresentasikan sama dengan skin yaitu 1 dan skin adalah 0 didalam kasus ini
     public Component(ArrayList<point> pList, int height, int width){
         this.pAreaComponent = new ArrayList<>();
@@ -34,7 +38,9 @@ public class Component {
         initMatrixFromList(pList);
         this.height = height;
         this.width = width;
-
+        isEye = false;
+        isMouth = false;
+        isNose = false;
         getBoundedPoint();
     }
 
@@ -103,15 +109,5 @@ public class Component {
 
     }
 
-    public boolean isEye(){
-        return false;
-    }
-
-    public boolean isNose(){
-        return false;
-    }
-
-    public boolean isMouth(){
-        return false;
-    }
+    
 }
