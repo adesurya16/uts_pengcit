@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.awt.Color;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Stack;
 
 public class SkinningField {
     final int redVal = (200 << 16) | (0 << 8) | 0;
@@ -15,7 +16,7 @@ public class SkinningField {
     final int threshold = 1000;
     private ArrayList<ObjSkin> pListObjSkin;
     ArrayList<point> pList;
-
+    Stack<point> floodFillStack;
 
     private int[][] redPixel;
     private int[][] bluePixel;
@@ -29,6 +30,7 @@ public class SkinningField {
 
     public SkinningField(int redPx[][], int greenPx[][], int bluePx[][], int matrixBW[][], int height, int width){
         this.pListObjSkin = new ArrayList<>();
+        this.floodFillStack = new Stack<>();
         // init
         this.redPixel = new int[height][];
         for(int i=0;i<height;i++){
@@ -79,6 +81,7 @@ public class SkinningField {
         }
 
         setObjectSkin();
+        System.out.println("Field : (w x h) " + this.width + " x " + this.height);
     }
 
     public int[][] getGreenPixel() {
@@ -120,6 +123,47 @@ public class SkinningField {
             for(int j=0;j<this.width;j++){
                 int col = ( (redPixel[i][j] << 16) | (greenPixel[i][j] << 8) | bluePixel[i][j] );
                 matrix[i][j] = col;
+            }
+        }
+    }
+
+    int getGSUsingLuminosty(int i,int j){
+        return (int)(0.3 * redPixel[i][j] + 0.59 * greenPixel[i][j] + 0.11 * bluePixel[i][j]);
+    }
+
+    int getGSUsingAvg(int i,int j){
+        return (int)(redPixel[i][j] + greenPixel[i][j] + bluePixel[i][j] / 3);
+    }
+
+    public void toGrayScaleMatrix(int matrix[][]){
+        for(int i =0;i<this.height;i++){
+            for(int j=0;j<this.width;j++){
+
+                // pake weight method or luminosty method
+                int val = getGSUsingAvg(i, j);
+                int col = ( (val << 16) | (val << 8) | val);
+                matrix[i][j] = col;
+            }
+        }
+    }
+
+    public void getDeletedPointSkinUsingStack(int px, int py){
+        this.floodFillStack.push(new point(px, py));
+        while(!floodFillStack.empty()){
+            point p = this.floodFillStack.peek();
+            this.floodFillStack.pop();
+            if (this.matrixBW[p.x][p.y] == whiteVal){
+                // System.out.println(p.x + ", " + p.y);
+                pList.add(p);
+                this.matrixBW[p.x][p.y] = blackVal;
+                for(int i=0;i < this.iterationDirections.length - 1 ;i++){
+                    int dx = p.x + iterationDirections[i][1];
+                    int dy = p.y + iterationDirections[i][0];
+                    if ((dx >= 0 && dx < this.height) && (dy >= 0 && dy < this.width)){
+                        this.floodFillStack.push(new point(dx, dy));
+                        // this.matrixBW[dx][dy] = blackVal;
+                    }
+                }
             }
         }
     }
@@ -177,7 +221,7 @@ public class SkinningField {
         copyToMatrix(matBWTmp);
         // ArrayList<point> toDelete = new ArrayList<>();
         // System.out.println(height + "  " + width);
-        
+        int obji = 0;
             for(int i = 0;i<this.height;i++){
                 for(int j = 0;j<this.width;j++){
                     int x = i;
@@ -185,10 +229,11 @@ public class SkinningField {
                     if (this.matrixBW[x][y] == whiteVal){
                         // toDelete.clear();
                         pList = new ArrayList<>();
-                        getDeletedPointSkin(x, y);
+                        getDeletedPointSkinUsingStack(x, y);
                         if(pList.size() > threshold){
+                            obji++;
                             // System.out.println("new object");
-
+                            System.out.println("Skin Object " + obji + " size : " + pList.size());
                             ObjSkin obj = new ObjSkin(pList, this.height, this.width);
                             this.pListObjSkin.add(obj);
                         }
@@ -229,9 +274,9 @@ public class SkinningField {
     }
 
     public void boundingObject(int mat[][], int val, int xmax, int xmin, int ymax, int ymin){
-        for(int i = xmin; i < xmax+1;i++){
-            for(int j = ymin; j< ymax+1;j++){
-                if((i == xmin || i == xmax ) || (j == ymin || j == ymax) ){
+        for(int i = xmin; i < xmax;i++){
+            for(int j = ymin; j< ymax;j++){
+                if((i == xmin || i == xmax - 1 ) || (j == ymin || j == ymax - 1) ){
                     mat[i][j] = val;
                 }
             }
@@ -258,8 +303,36 @@ public class SkinningField {
                     if (c.isEye) boundingObject(matRGBTmp, blueVal, c.Xmax, c.Xmin, c.Ymax, c.Ymin);
                 }
             }else{
-                // System.out.println("marked");
-                boundingObject(matRGBTmp, blueVal, p.Xmax, p.Xmin, p.Ymax, p.Ymin);
+                System.out.println("not a face");
+                // boundingObject(matRGBTmp, blueVal, p.Xmax, p.Xmin, p.Ymax, p.Ymin);
+            }
+        }
+        return matRGBTmp;
+    }
+
+    public int[][] getmarkedObjectToRGBvalueGrayscale(){
+        int[][] matRGBTmp = new int[this.height][];
+        for(int i = 0;i < this.height;i++){
+            matRGBTmp[i] = new int[this.width];
+        }
+
+        // copyToMatrixRGB(matRGBTmp);
+        toGrayScaleMatrix(matRGBTmp);
+
+        for(ObjSkin p: this.pListObjSkin){
+            if(p.IsFaceDetected()){
+                boundingObject(matRGBTmp, redVal, p.Xmax, p.Xmin, p.Ymax, p.Ymin);
+                // System.out.println("(Xmax,Ymax) : (" + p.Xmax + ", " + p.Ymax + ")");                
+                // System.out.println("(Xmin,Ymin) : (" + p.Xmin + ", " + p.Ymin + ")"); 
+                // per component
+                ArrayList<Component> pComp = p.getComponentList();
+                
+                for(Component c: pComp){
+                    if (c.isEye) boundingObject(matRGBTmp, blueVal, c.Xmax, c.Xmin, c.Ymax, c.Ymin);
+                }
+            }else{
+                System.out.println("not a face");
+                // boundingObject(matRGBTmp, blueVal, p.Xmax, p.Xmin, p.Ymax, p.Ymin);
             }
         }
         return matRGBTmp;

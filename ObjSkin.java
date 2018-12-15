@@ -3,6 +3,8 @@
 // import android.graphics.Color;
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Stack;
+
 
 public class ObjSkin {
     final int redVal = (200 << 16) | (0 << 8) | 0;
@@ -17,6 +19,7 @@ public class ObjSkin {
 
     boolean isHole;
     ArrayList<point> pList;
+    Stack<point> floodFillStack;
 
     // bouded point
     public int Xmax;
@@ -31,6 +34,7 @@ public class ObjSkin {
 
     public ObjSkin(ArrayList<point> pList, int height, int width){
         // System.out.println("obj ctor");
+        this.floodFillStack = new Stack<>();
         this.pAreaSkinList = new ArrayList<>();
         this.componentList = new ArrayList<>();
         this.matrixBW = new int[height][];
@@ -119,12 +123,21 @@ public class ObjSkin {
                 y_end = p.y;
             }
         }
-        
-        x_start -= 1;
-        x_end += 1;
 
-        y_start -= 1;
-        y_end += 1;
+        if (x_start - 1 >= 0){
+            x_start -= 1;
+        }
+
+        if (x_start + 1 < this.height){
+            x_end += 1;            
+        }
+
+        if (y_start - 1 >= 0){
+            y_start -= 1;
+        }
+        if (y_start + 1 < this.width){
+            y_end += 1;
+        }
 
         this.Xmin = x_start;
         this.Xmax = x_end;
@@ -147,15 +160,15 @@ public class ObjSkin {
         }
 
         copyToMatrix(matBWTmp);
-        for(int i = this.Xmin;i<=this.Xmax + 1;i++){
-            for(int j = this.Ymin;j <= this.Ymax + 1;j++){
+        for(int i = this.Xmin;i<this.Xmax;i++){
+            for(int j = this.Ymin;j < this.Ymax;j++){
                 int x = i;
                 int y = j;
                 if (this.matrixBW[x][y] == blackVal){
                     // System.out.println("current hole");
                     isHole = true;
                     pList = new ArrayList<>();
-                    getDeletedPointSkinComponent(x, y);
+                    getDeletedPointSkinComponentUsingStack(x, y);
                     if (isHole) {
                         this.componentList.add(new Component(pList, this.height, this.width));
                         // System.out.println("NEW component");
@@ -165,11 +178,31 @@ public class ObjSkin {
                 }
             }
         }
-
+        System.out.println("banyak component di skin : " + this.componentList.size());
         setMatrixBW(matBWTmp);
     }
 
-
+    public void getDeletedPointSkinComponentUsingStack(int px, int py){
+        this.floodFillStack.push(new point(px, py));
+        while(!floodFillStack.empty()){
+            point p = this.floodFillStack.peek();
+            this.floodFillStack.pop();
+            if (this.matrixBW[p.x][p.y] == blackVal){
+                pList.add(p);
+                this.matrixBW[p.x][p.y] = whiteVal;
+                for(int i=0;i < this.iterationDirections.length - 1 ;i++){
+                    int dx = p.x + iterationDirections[i][1];
+                    int dy = p.y + iterationDirections[i][0];
+                    if ((dx >= this.Xmin && dx < this.Xmax) && (dy >= this.Ymin && dy < this.Ymax)){
+                        this.floodFillStack.push(new point(dx, dy));
+                        // this.matrixBW[dx][dy] = blackVal;
+                    }else{
+                        isHole = false;
+                    }
+                }
+            }
+        }
+    }
 
     public void getDeletedPointSkinComponent(int px, int py){
         // pList harus udah clear dipanggilan pertama
@@ -180,7 +213,7 @@ public class ObjSkin {
                 for(int i=0;i < this.iterationDirections.length - 1 ;i++){
                     int dx = px + iterationDirections[i][1];
                     int dy = py + iterationDirections[i][0];
-                    if ((dx >= this.Xmin && dx <= this.Xmax) && (dy >= this.Ymin && dy <= this.Ymax)){
+                    if ((dx >= this.Xmin && dx < this.Xmax) && (dy >= this.Ymin && dy < this.Ymax)){
                         getDeletedPointSkinComponent(dx, dy);
                     }else {
                         isHole = false;
@@ -194,7 +227,7 @@ public class ObjSkin {
         // System.out.println("eye detection");
         System.out.println(this.Xmax + ", " + this.Xmin);
         System.out.println(this.Ymax + ", " + this.Ymin);
-
+        
         ArrayList<Component> pList2 = new ArrayList<>();
         int batas = this.Ymin + ((this.Ymax - this.Ymin) / 3);
         for(Component p : this.componentList){
@@ -202,7 +235,7 @@ public class ObjSkin {
                 pList2.add(p);
             }
         }
-        System.out.println(pList2.size());
+        System.out.println("calon mata " + pList2.size());
 
         ArrayList<Component> pList2Sorted = new ArrayList<>();
         while (pList2.size() > 0){
@@ -222,15 +255,17 @@ public class ObjSkin {
             pList2.remove(jmax);
             pList2Sorted.add(pMax);    
         }
-        System.out.println(pList2Sorted.size());
+        // System.out.println("sorted "pList2Sorted.size());
 
-        for(int i=0;i<pList2Sorted.size() ;i++){
+        for(int i=0;i<pList2Sorted.size()-1 ;i++){
             // pList2Sorted.get(i).isEye = true;
             // int idx1 = this.componentList.indexOf(pList2Sorted.get(i));
             // this.componentList.get(idx1).isEye = true;
 
             // bisa tambahin chain code
-            if( Math.abs((double)pList2Sorted.get(i).Ymax - (double)pList2Sorted.get(i + 1).Ymax) < 10){
+            Component c1 = pList2Sorted.get(i);
+            Component c2 = pList2Sorted.get(i + 1);
+            if( (Math.abs((double)c1.Ymax - (double)c2.Ymax) < 10) && (Math.abs(c1.pAreaComponent.size() - c2.pAreaComponent.size()) < 100) && ((c1.Xmax < c2.Xmin) || (c1.Xmin > c2.Xmax)) ){
                 pList2Sorted.get(i).isEye = true;
                 int idx1 = this.componentList.indexOf(pList2Sorted.get(i));
                 this.componentList.get(idx1).isEye = true;
@@ -245,7 +280,17 @@ public class ObjSkin {
     }
 
     public boolean IsFaceDetected(){
-        return true;
+        int isEye = 0;
+        int isMouth = 0;
+        int isNose = 0; 
+        for(Component p : this.componentList){
+            if (p.isEye) isEye++;
+            if (p.isMouth) isMouth++;
+            if (p.isNose) isNose++;
+        }
+        if(isEye == 2){
+            return true;
+        }else return false;
         // int isEye = 0;
         // int isNose = 0;
         // int isMouth = 0;

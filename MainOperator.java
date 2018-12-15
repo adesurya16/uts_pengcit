@@ -297,7 +297,9 @@ public class MainOperator{
         Scanner sc = new Scanner(System.in);
         String s = sc.nextLine();        
         String file = s + ".png";
-        String file2 = s + "out.png";
+        String fileGS = s + "outGS.png";
+        String fileBW = s + "outBW.png";
+        String fileRGB = s + "outRGB.png";
         try{    
             BufferedImage img = ImageIO.read(new File(file));
             // System.out.println("masuk");
@@ -309,9 +311,12 @@ public class MainOperator{
             mo.imageSkinRgbOperation();
            
             SkinningField sf = new SkinningField(mo.redPixel2, mo.greenPixel2, mo.bluePixel2, mo.matrixBw, img.getWidth(), img.getHeight());
-            // mo.setMatrixBW(sf.getMarkedObjectToBW());
+            mo.setMatrixBW(sf.getMarkedObjectToBW());
+            mo.toImageBw(fileBW);
             mo.setMatrixRGB(sf.getmarkedObjectToRGBvalue());
-            mo.toImageRGB(file2);
+            mo.toImageRGB(fileRGB);
+            mo.setMatrixRGB(sf.getmarkedObjectToRGBvalueGrayscale());
+            mo.toImageRGB(fileGS);
 
         }catch(IOException e){
             e.printStackTrace();

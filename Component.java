@@ -17,7 +17,7 @@ public class Component {
     public int Xmin;
     public int Ymin;
 
-    private ArrayList<point> pAreaComponent;
+    public ArrayList<point> pAreaComponent;
     private int[][] matrixBW;
     private ArrayList<Integer> chainCodeList;
 
@@ -92,11 +92,20 @@ public class Component {
             }
         }
 
-        x_start -= 1;
-        x_end += 1;
+       if (x_start - 1 >= 0){
+            x_start -= 1;
+        }
 
-        y_start -= 1;
-        y_end += 1;
+        if (x_start + 1 < this.height){
+            x_end += 1;            
+        }
+
+        if (y_start - 1 >= 0){
+            y_start -= 1;
+        }
+        if (y_start + 1 < this.width){
+            y_end += 1;
+        }
 
         this.Xmin = x_start;
         this.Xmax = x_end;
