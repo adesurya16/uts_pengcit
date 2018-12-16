@@ -298,6 +298,7 @@ public class MainOperator{
         String s = sc.nextLine();        
         String file = s + ".png";
         String fileGS = s + "outGS.png";
+        String fileThreshold = s + "outThreshold.png";
         String fileBW = s + "outBW.png";
         String fileRGB = s + "outRGB.png";
         try{    
@@ -317,7 +318,8 @@ public class MainOperator{
             mo.toImageRGB(fileRGB);
             mo.setMatrixRGB(sf.getmarkedObjectToRGBvalueGrayscale());
             mo.toImageRGB(fileGS);
-
+            mo.setMatrixBW(sf.getBWmatrixThreshold());
+            mo.toImageBw(fileThreshold);            
         }catch(IOException e){
             e.printStackTrace();
         }

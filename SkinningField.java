@@ -15,8 +15,8 @@ public class SkinningField {
     final int blackVal = (0 << 16) | (0 << 8) | 0;
     final int threshold = 1000;
     private ArrayList<ObjSkin> pListObjSkin;
-    ArrayList<point> pList;
-    Stack<point> floodFillStack;
+    private ArrayList<point> pList;
+    private Stack<point> floodFillStack;
 
     private int[][] redPixel;
     private int[][] bluePixel;
@@ -132,7 +132,7 @@ public class SkinningField {
     }
 
     int getGSUsingAvg(int i,int j){
-        return (int)(redPixel[i][j] + greenPixel[i][j] + bluePixel[i][j] / 3);
+        return (int)( (redPixel[i][j] + greenPixel[i][j] + bluePixel[i][j]) / 3);
     }
 
     public void toGrayScaleMatrix(int matrix[][]){
@@ -143,6 +143,17 @@ public class SkinningField {
                 int val = getGSUsingAvg(i, j);
                 int col = ( (val << 16) | (val << 8) | val);
                 matrix[i][j] = col;
+            }
+        }
+    }
+
+    public void toGrayScaleMatrixValue(int matrix[][]){
+        for(int i =0;i<this.height;i++){
+            for(int j=0;j<this.width;j++){
+
+                // pake weight method or luminosty method
+                int val = getGSUsingAvg(i, j);
+                matrix[i][j] = val;
             }
         }
     }
@@ -264,16 +275,26 @@ public class SkinningField {
                 ArrayList<Component> pComp = p.getComponentList();
                 // System.out.println("Ada Component : " + pComp.size());
                 for(Component c: pComp){
-                    if (c.isEye) boundingObject(matBWTmp, blueVal, c.Xmax, c.Xmin, c.Ymax, c.Ymin);
+                    if (c.isEye) System.out.println("mata");
+                    if (c.isMouth) System.out.println("mulut");
+                    if (c.isEye || c.isMouth) boundingObject(matBWTmp, blueVal, c.Xmax, c.Xmin, c.Ymax, c.Ymin);
+                    // if (c.mouth) boundingObject(matBWTmp, blueVal, c.Xmax, c.Xmin, c.Ymax, c.Ymin);
                 }
             }else{
-                boundingObject(matBWTmp, blueVal, p.Xmax, p.Xmin, p.Ymax, p.Ymin);
+                // boundingObject(matBWTmp, blueVal, p.Xmax, p.Xmin, p.Ymax, p.Ymin);
             }
         }
         return matBWTmp;
     }
 
     public void boundingObject(int mat[][], int val, int xmax, int xmin, int ymax, int ymin){
+        if (val == redVal){
+            int sel = (xmax-xmin);
+            ymax = ymin + sel;
+        }
+        // System.out.println(xmax + ", " + xmin);
+        // System.out.println(ymax + ", " + ymin);
+
         for(int i = xmin; i < xmax;i++){
             for(int j = ymin; j< ymax;j++){
                 if((i == xmin || i == xmax - 1 ) || (j == ymin || j == ymax - 1) ){
@@ -300,7 +321,10 @@ public class SkinningField {
                 ArrayList<Component> pComp = p.getComponentList();
                 
                 for(Component c: pComp){
-                    if (c.isEye) boundingObject(matRGBTmp, blueVal, c.Xmax, c.Xmin, c.Ymax, c.Ymin);
+                    if (c.isEye) System.out.println("mata");
+                    if (c.isMouth) System.out.println("mulut");
+                    if (c.isEye || c.isMouth) boundingObject(matRGBTmp, blueVal, c.Xmax, c.Xmin, c.Ymax, c.Ymin);
+                    // if (c.isMouth) boundingObject(matRGBTmp, blueVal, c.Xmax, c.Xmin, c.Ymax, c.Ymin);
                 }
             }else{
                 System.out.println("not a face");
@@ -328,7 +352,7 @@ public class SkinningField {
                 ArrayList<Component> pComp = p.getComponentList();
                 
                 for(Component c: pComp){
-                    if (c.isEye) boundingObject(matRGBTmp, blueVal, c.Xmax, c.Xmin, c.Ymax, c.Ymin);
+                    if (c.isEye || c.isMouth) boundingObject(matRGBTmp, blueVal, c.Xmax, c.Xmin, c.Ymax, c.Ymin);
                 }
             }else{
                 System.out.println("not a face");
@@ -336,5 +360,51 @@ public class SkinningField {
             }
         }
         return matRGBTmp;
+    }
+
+
+    public int[][] getBWmatrixThreshold(){
+        int[][] matRGBTmp = new int[this.height][];
+        for(int i = 0;i < this.height;i++){
+            matRGBTmp[i] = new int[this.width];
+        }
+        int[][] matBWTmp = new int[this.height][];
+        for(int i = 0;i<this.height;i++){
+            matBWTmp[i] = new int[this.width];
+        }
+
+        copyToMatrix(matBWTmp);
+
+        // copyToMatrixRGB(matRGBTmp);
+        toGrayScaleMatrixValue(matRGBTmp);
+        for(ObjSkin p: this.pListObjSkin){
+            if(p.IsFaceDetected()){
+                OtsuThresholderSkin ot = new OtsuThresholderSkin(matRGBTmp, height, width, p.Xmin, p.Xmax, p.Ymin, p.Ymax);
+                ot.doThresholding();
+                System.out.println("Threshold : " + ot.getThresholdResult());
+                ArrayList<point> pList = ot.getResultMatrixthresholding(p.Xmin, p.Xmax, p.Ymin, p.Ymax);
+                for(int i = p.Xmin;i < p.Xmax;i++){
+                    for(int j = p.Ymin; j < p.Ymax;j++){
+                        matBWTmp[i][j] = blackVal;
+                    }
+                }
+                for(point pp:pList){
+                    matBWTmp[pp.x][pp.y] = whiteVal;
+                }
+                boundingObject(matBWTmp, redVal, p.Xmax, p.Xmin, p.Ymax, p.Ymin);
+                // System.out.println("(Xmax,Ymax) : (" + p.Xmax + ", " + p.Ymax + ")");                
+                // System.out.println("(Xmin,Ymin) : (" + p.Xmin + ", " + p.Ymin + ")"); 
+                // per component
+                // ArrayList<Component> pComp = p.getComponentList();
+                
+                // for(Component c: pComp){
+                //     if (c.isEye) boundingObject(matRGBTmp, blueVal, c.Xmax, c.Xmin, c.Ymax, c.Ymin);
+                // }
+            }else{
+                // System.out.println("not a face");
+                // boundingObject(matRGBTmp, blueVal, p.Xmax, p.Xmin, p.Ymax, p.Ymin);
+            }
+        }
+        return matBWTmp;
     }
 }

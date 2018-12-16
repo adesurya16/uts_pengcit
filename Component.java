@@ -27,17 +27,18 @@ public class Component {
 
     // component merupakan hole dari skin tapi direpresentasikan sama dengan skin yaitu 1 dan skin adalah 0 didalam kasus ini
     public Component(ArrayList<point> pList, int height, int width){
-        this.pAreaComponent = new ArrayList<>();
-        this.chainCodeList = new ArrayList<>();
-        this.matrixBW = new int[height][];
-        for(int i = 0; i < height; i++){
-            this.matrixBW[i] = new int[width];
-        }
-
-        pAreaComponent.addAll(pList);
-        initMatrixFromList(pList);
         this.height = height;
         this.width = width;
+        this.pAreaComponent = new ArrayList<>();
+        this.chainCodeList = new ArrayList<>();
+        // this.matrixBW = new int[height][];
+        // for(int i = 0; i < height; i++){
+        //     this.matrixBW[i] = new int[width];
+        // }
+
+        pAreaComponent.addAll(pList);
+        // initMatrixFromList(pList);
+        
         isEye = false;
         isMouth = false;
         isNose = false;
@@ -118,5 +119,10 @@ public class Component {
 
     }
 
+    public void printBounded(){
+        System.out.println("Component Bounded");
+        System.out.println(Xmax + ", " + Xmin);
+        System.out.println(Ymax + ", " + Ymin);
+    }
     
 }
